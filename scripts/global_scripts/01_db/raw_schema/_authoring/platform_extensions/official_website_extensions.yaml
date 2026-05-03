@@ -1,0 +1,400 @@
+# ==============================================================================
+# official_website_extensions.yaml  -  official_website Platform Extension (MP157 Layer 1)
+# ==============================================================================
+# Bound by:
+#   - MP102 v1.2  (ETL Output Standardization, MP156 Tier-2 Schema Contract)
+#   - MP156       (Two-Tier Normativity, Category A - Schema Contract binding)
+#   - MP157       (Two-Layer YAML Authoring, Layer 1 platform extension)
+#   - MP158       (Glue-Driven Raw Layer Extensibility, axis 2 Step 1 target)
+#   - MP159       (Glue Authoring Boundary Immutability - immutable during bridge authoring)
+#   - SO_R038     (Schema Authoring YAML Naming Convention)
+#
+# Most recent significant edit: spectra change qef-product-master-redesign
+#   Phase 9 task 9.0e (Layer 1 binding header, 2026-04-28).
+#
+# Change discipline (same as core_schemas.yaml):
+#   - IC_P002 cross-company verification + Verified: trailer required.
+#   - Edits during a /glue-bridge skill flow are forbidden (MP159).
+#   - Adding a new field-level key requires updating _meta_schema.yaml.
+# ==============================================================================
+
+# Official Website Platform Extensions
+# Following MP102 (v1.2): ETL Output Standardization Principle
+# Bound by MP102 per MP156 Two-Tier Normativity (Category A — Schema Contract)
+# Platform ID: official_website
+# Created: 2026-04-27 (spectra change `glue-layer-prerawdata-bridge`, #489 Phase 2)
+#
+# These fields extend the core schemas for company-owned website data
+# (typically from CMS-driven storefronts: WooCommerce, Magento, custom builds,
+# or static + serverless storefronts).
+# All extension fields MUST use the `ow_` prefix.
+#
+# Note: `official_website` is the only platform_id that exceeds 3 letters; this
+# is an explicit exception per validation_rules.platform_id_validation in
+# core_schemas.yaml.
+
+# =============================================================================
+# SALES — Official website-specific sales transaction fields
+# =============================================================================
+sales:
+  description: "Official website-specific sales transaction fields"
+  description_zh: "官網平台專屬的銷售交易欄位"
+  extends: "core_sales_v2"
+  fields:
+    ow_site_domain:
+      type: VARCHAR
+      required: true
+      description: "Official website canonical domain (e.g., www.example.com)"
+      description_zh: "官網標準網域(如 www.example.com)"
+      aliases:
+        - "site_domain"
+        - "domain"
+        - "website"
+      pattern: "^([a-z0-9]([a-z0-9-]*[a-z0-9])?\\.)+[a-z]{2,}$"
+
+    ow_session_id:
+      type: VARCHAR
+      required: false
+      description: "Web session identifier at order placement (for funnel attribution)"
+      description_zh: "下單時的網站 session 識別碼(用於漏斗歸因)"
+      aliases:
+        - "session_id"
+        - "Session ID"
+
+    ow_user_agent:
+      type: TEXT
+      required: false
+      description: "Browser user agent string at order placement"
+      description_zh: "下單時的瀏覽器 user agent 字串"
+      aliases:
+        - "user_agent"
+        - "User Agent"
+        - "ua"
+
+    ow_referrer_url:
+      type: TEXT
+      required: false
+      description: "HTTP referrer URL at the time of conversion"
+      description_zh: "轉換發生時的 HTTP referrer URL"
+      aliases:
+        - "referrer"
+        - "referrer_url"
+        - "Referrer URL"
+
+    ow_utm_source:
+      type: VARCHAR
+      required: false
+      description: "UTM source parameter (google, facebook, newsletter, direct, etc.)"
+      description_zh: "UTM source 參數(google、facebook、newsletter、direct 等)"
+      aliases:
+        - "utm_source"
+        - "UTM Source"
+
+    ow_utm_medium:
+      type: VARCHAR
+      required: false
+      description: "UTM medium parameter (cpc, organic, email, social, etc.)"
+      description_zh: "UTM medium 參數(cpc、organic、email、social 等)"
+      aliases:
+        - "utm_medium"
+        - "UTM Medium"
+
+    ow_utm_campaign:
+      type: VARCHAR
+      required: false
+      description: "UTM campaign parameter"
+      description_zh: "UTM campaign 參數"
+      aliases:
+        - "utm_campaign"
+        - "UTM Campaign"
+
+    ow_utm_term:
+      type: VARCHAR
+      required: false
+      description: "UTM term parameter (paid keyword)"
+      description_zh: "UTM term 參數(付費關鍵字)"
+      aliases:
+        - "utm_term"
+        - "UTM Term"
+
+    ow_utm_content:
+      type: VARCHAR
+      required: false
+      description: "UTM content parameter (ad variant identifier)"
+      description_zh: "UTM content 參數(廣告變體識別碼)"
+      aliases:
+        - "utm_content"
+        - "UTM Content"
+
+    ow_landing_page:
+      type: TEXT
+      required: false
+      description: "First page URL the customer landed on this session"
+      description_zh: "本次 session 顧客最初登陸的頁面 URL"
+      aliases:
+        - "landing_page"
+        - "Landing Page"
+        - "entry_page"
+
+    ow_payment_gateway:
+      type: VARCHAR
+      required: false
+      description: "Payment gateway used (stripe, paypal, ecpay, newebpay, etc.)"
+      description_zh: "使用的金流(stripe、paypal、ecpay、newebpay 等)"
+      aliases:
+        - "payment_gateway"
+        - "Payment Gateway"
+        - "gateway"
+      examples: ["stripe", "paypal", "ecpay", "newebpay", "linepay", "applepay"]
+
+    ow_currency:
+      type: VARCHAR
+      required: false
+      description: "ISO 4217 currency code"
+      description_zh: "ISO 4217 幣別代碼"
+      aliases:
+        - "currency"
+        - "Currency"
+      pattern: "^[A-Z]{3}$"
+
+    ow_discount_code:
+      type: VARCHAR
+      required: false
+      description: "Applied discount / coupon code"
+      description_zh: "套用的折扣碼 / 優惠券代碼"
+      aliases:
+        - "discount_code"
+        - "coupon_code"
+        - "voucher_code"
+
+    ow_discount_amount:
+      type: NUMERIC
+      required: false
+      description: "Total discount applied"
+      description_zh: "套用折扣總額"
+      aliases:
+        - "discount_amount"
+        - "Discount"
+
+# =============================================================================
+# CUSTOMERS — Official website-specific customer fields
+# =============================================================================
+customers:
+  description: "Official website-specific customer fields"
+  description_zh: "官網平台專屬的顧客欄位"
+  extends: "core_customers_v2"
+  fields:
+    ow_member_id:
+      type: VARCHAR
+      required: false
+      description: "Internal member system ID"
+      description_zh: "內部會員系統 ID"
+      aliases:
+        - "member_id"
+        - "Member ID"
+
+    ow_member_tier:
+      type: VARCHAR
+      required: false
+      description: "Membership tier (bronze, silver, gold, platinum, vip)"
+      description_zh: "會員等級(bronze、silver、gold、platinum、vip)"
+      aliases:
+        - "tier"
+        - "member_level"
+        - "membership_tier"
+      examples: ["bronze", "silver", "gold", "platinum", "vip"]
+
+    ow_loyalty_points:
+      type: INTEGER
+      required: false
+      description: "Current loyalty points balance"
+      description_zh: "目前忠誠點數餘額"
+      aliases:
+        - "loyalty_points"
+        - "points_balance"
+        - "points"
+
+    ow_subscribed_to_newsletter:
+      type: BOOLEAN
+      required: false
+      description: "Whether the customer is subscribed to the newsletter"
+      description_zh: "顧客是否訂閱電子報"
+      aliases:
+        - "newsletter_subscribed"
+        - "subscribed"
+        - "is_subscribed"
+
+    ow_phone:
+      type: VARCHAR
+      required: false
+      description: "Customer phone number (E.164 preferred)"
+      description_zh: "顧客電話號碼(優先用 E.164 格式)"
+      aliases:
+        - "phone"
+        - "Phone"
+        - "contact_number"
+      privacy: "PII - encrypt at rest"
+
+    ow_default_country:
+      type: VARCHAR
+      required: false
+      description: "Default address country (ISO 3166-1 alpha-2)"
+      description_zh: "預設地址國家(ISO 3166-1 alpha-2)"
+      aliases:
+        - "country"
+        - "country_code"
+      pattern: "^[A-Z]{2}$"
+
+    ow_signup_source:
+      type: VARCHAR
+      required: false
+      description: "Where the customer signed up (web, mobile_app, instagram, ad_landing, etc.)"
+      description_zh: "顧客註冊來源(web、mobile_app、instagram、ad_landing 等)"
+      aliases:
+        - "signup_source"
+        - "registration_source"
+
+# =============================================================================
+# PRODUCTS — Official website-specific product catalog fields
+# =============================================================================
+products:
+  description: "Official website-specific product catalog fields"
+  description_zh: "官網平台專屬的產品目錄欄位"
+  extends: "core_products_v2"
+  fields:
+    ow_product_url:
+      type: TEXT
+      required: false
+      description: "Canonical product page URL (full URL with domain)"
+      description_zh: "產品頁標準 URL(含完整網域)"
+      aliases:
+        - "product_url"
+        - "url"
+        - "Product URL"
+
+    ow_product_slug:
+      type: VARCHAR
+      required: false
+      description: "URL slug for the product (e.g., 'classic-tshirt')"
+      description_zh: "產品的 URL slug(如 classic-tshirt)"
+      aliases:
+        - "slug"
+        - "handle"
+        - "product_slug"
+      pattern: "^[a-z0-9-]+$"
+
+    ow_meta_title:
+      type: VARCHAR
+      required: false
+      description: "HTML meta title (SEO)"
+      description_zh: "HTML meta 標題(SEO)"
+      aliases:
+        - "meta_title"
+        - "Meta Title"
+        - "seo_title"
+
+    ow_meta_description:
+      type: TEXT
+      required: false
+      description: "HTML meta description (SEO)"
+      description_zh: "HTML meta 描述(SEO)"
+      aliases:
+        - "meta_description"
+        - "Meta Description"
+        - "seo_description"
+
+    ow_canonical_url:
+      type: TEXT
+      required: false
+      description: "Canonical URL for SEO (rel=canonical)"
+      description_zh: "SEO 用的 canonical URL(rel=canonical)"
+      aliases:
+        - "canonical_url"
+        - "Canonical URL"
+
+    ow_published_at:
+      type: VARCHAR
+      required: false
+      description: "Product publication date as string"
+      description_zh: "產品發布日期(字串)"
+      aliases:
+        - "published_at"
+        - "publish_date"
+        - "Published At"
+
+    ow_inventory_count:
+      type: INTEGER
+      required: false
+      description: "Current inventory count"
+      description_zh: "目前庫存數量"
+      aliases:
+        - "inventory_count"
+        - "stock"
+        - "stock_quantity"
+
+    ow_main_image_url:
+      type: TEXT
+      required: false
+      description: "Main product image URL"
+      description_zh: "主要產品圖片 URL"
+      aliases:
+        - "main_image_url"
+        - "image_url"
+        - "primary_image"
+
+    ow_gallery_image_urls:
+      type: TEXT
+      required: false
+      description: "Gallery image URLs (JSON array)"
+      description_zh: "圖片庫圖片 URL(JSON 陣列)"
+      aliases:
+        - "gallery_image_urls"
+        - "gallery_urls"
+      format: "JSON array"
+
+# =============================================================================
+# REVIEWS — Official website-specific review fields
+# =============================================================================
+reviews:
+  description: "Official website-specific review fields (commonly from custom CMS or review widgets)"
+  description_zh: "官網平台專屬評論欄位(通常來自自建 CMS 或評論套件)"
+  extends: "core_reviews_v2"
+  fields:
+    ow_reviewer_display_name:
+      type: VARCHAR
+      required: false
+      description: "Public display name of the reviewer (separate from customer_id which may be private)"
+      description_zh: "評論者公開顯示名稱(與可能為私密的 customer_id 分開)"
+      aliases:
+        - "display_name"
+        - "reviewer_name"
+
+    ow_review_source:
+      type: VARCHAR
+      required: false
+      description: "Review collection source (website_form, post_purchase_email, third_party_widget, manual_import)"
+      description_zh: "評論收集來源(website_form、post_purchase_email、third_party_widget、manual_import)"
+      aliases:
+        - "review_source"
+        - "collection_source"
+      examples: ["website_form", "post_purchase_email", "third_party_widget", "manual_import"]
+
+    ow_verified_purchase:
+      type: BOOLEAN
+      required: false
+      description: "Whether the reviewer matches a known order in the system"
+      description_zh: "評論者是否與系統中的已知訂單對應"
+      aliases:
+        - "verified_purchase"
+        - "is_verified"
+
+    ow_moderation_status:
+      type: VARCHAR
+      required: false
+      description: "Moderation status (pending, approved, rejected, spam)"
+      description_zh: "審核狀態(pending、approved、rejected、spam)"
+      aliases:
+        - "moderation_status"
+        - "approval_status"
+        - "status"
+      examples: ["pending", "approved", "rejected", "spam"]

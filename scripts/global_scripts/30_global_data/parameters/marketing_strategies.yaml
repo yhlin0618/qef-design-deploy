@@ -1,0 +1,112 @@
+# =============================================================================
+# Marketing Strategies Reference Data
+# Used by: fn_rsv_classification.R > classify_rsv_and_strategy()
+# Source: L3 sandbox module_tagpilot_marketing.R (PDF pp.2-6)
+# Issue: #219
+#
+# Each strategy has:
+#   - key: English strategy name (used in code matching)
+#   - purpose: Chinese marketing purpose (行銷目的)
+#   - recommendation: Detailed Chinese recommendation (HTML, <br> separated)
+# =============================================================================
+
+strategies:
+  "Awakening / Return":
+    purpose: "防流失"
+    recommendation: >-
+      1. 定期發送關懷訊息，附上個人化優惠<br>
+      2. S1 給小額折扣<br>
+      3. S3 提供更大折扣或專屬好禮，增加誘因<br>
+      4. 利用廣告再行銷觸及長期未互動者<br>
+      5. 在社群/網路上重新進入他們視野，引導回購
+
+  "Relationship Repair":
+    purpose: "降反感"
+    recommendation: >-
+      1. 根據過往喜好推薦新品資訊或限時折扣券，引發興趣<br>
+      2. 透過 EDM、APP 推播等自動化工具發送專屬優惠<br>
+      3. 根據最近瀏覽的品類提供優惠，促進再購<br>
+      4. 主動調查滿意度或收集回饋，找出活躍下滑原因並對症優化
+
+  "Cost Control":
+    purpose: "避免浪費"
+    recommendation: >-
+      1. 資深客服或經理以個人名義主動聯繫（如 Email 致謝），提供量身定制的專屬優惠<br>
+      2. 如有必要可安排線上一對一服務或諮詢，傾聽其需求變化，以消除停止購買的障礙
+
+  "New Customer Nurturing":
+    purpose: "建立信任"
+    recommendation: >-
+      1. 歡迎新客計畫：首購後立即跟進，透過 Email 或簡訊感謝購買，並詢問使用體驗<br>
+      2. 提供新手專屬禮遇，如下次購物折扣券、免運優惠或新會員積分禮<br>
+      3. 搭配品牌故事、熱銷商品介紹、使用教學等內容推送<br>
+      4. 建立 FAQ、自動客服機器人等支援，降低購買門檻並增強信任感
+
+  "Low-Cost Nurturing":
+    purpose: "不放棄"
+    recommendation: >-
+      1. 善用行銷自動化工具進行批量且精準的溝通，如定期發送促銷電子報<br>
+      2. 提供小額累積獎勵機制，如每次購買可累積積分兌換小禮物<br>
+      3. 對於一段時間內毫無互動的，透過溫馨提醒或特惠券激發興趣<br>
+      4. 針對購買反應熱絡者，後續可升級為重點經營對象<br>
+      5. 對長期無回響者逐漸減少行銷資源投入，把重心放在更有價值客群
+
+  "Standard Nurturing (Conservative)":
+    purpose: "建立穩定節奏"
+    recommendation: >-
+      1. 建立定期溝通機制：在每次購買後的預估用畢日期前，透過 Email/簡訊提醒可能需要再次購買<br>
+      2. 提供預訂/訂閱選項：若產品屬於消耗品，可提議加入定期訂購計畫<br>
+      3. 當發現已超過平均購買週期未回購，及早給予關懷，發送專屬折扣券<br>
+      4. 在日常經營中強調產品品質與服務一致性，增加繼續選擇本品牌的信心
+
+  "Standard Nurturing (Core)":
+    purpose: "擴展需求"
+    recommendation: >-
+      1. 需求預測與提醒：分析此客群購買週期和季節性趨勢，在預計其將產生需求時主動發送提醒<br>
+      2. 優惠驅動：提供限時折扣或免運券來降低購買猶豫<br>
+      3. 對於尚未購買的新產品線，根據已購產品的使用場景推薦相關產品，增加額外銷售機會
+
+  "Standard Nurturing (Advanced)":
+    purpose: "提升客單"
+    recommendation: >-
+      1. VIP 升級誘因：設計分級會員制度，向穩定熟客宣傳升級好處<br>
+      2. 透過提示其距離升級僅差幾次購買或金額，激發追求更高會員等級的動機<br>
+      3. 推薦體驗更高價值的產品或服務，提供試用或優惠價降低嘗試門檻<br>
+      4. 對經常購買同類產品的，建議加入訂閱計畫並給予訂閱折扣<br>
+      5. 強調「您是我們的忠實顧客，值得更尊榮待遇」，以情感連結促進升級意願
+
+  "VIP Maintenance (Low Stability)":
+    purpose: "提升穩定度"
+    recommendation: >-
+      1. 建立專屬會員制：提供差異化待遇（如更高現金回饋、專屬折扣碼、獨享新品預購權）<br>
+      2. 個性化再行銷：根據過去購買的大額品項，定期推薦相關高端新品或配套服務<br>
+      3. 體驗關懷：不定期進行服務回訪，在重大節日送上個性化祝福或小禮，強化情感連結
+
+  "VIP Maintenance (Mid Stability)":
+    purpose: "維持滿意度"
+    recommendation: >-
+      1. 專屬關懷：提供特別的關注與禮遇，如由客服經理發出感謝信並提供專屬折扣券<br>
+      2. 邀請參與品牌體驗活動或新品發表會，深化情感連結<br>
+      3. 定期追蹤購買趨勢，適時給予激勵（如「再購買一次即可升級 VIP」）
+
+  "VIP Maintenance (High Stability)":
+    purpose: "深化忠誠"
+    recommendation: >-
+      1. VIP 尊享服務：提供專屬客服熱線、生日定制禮品、會員日雙倍積分等<br>
+      2. 參與感計畫：邀請參與品牌諮詢委員會或新品試用小組，增強歸屬感與榮譽感<br>
+      3. 鼓勵口碑：透過會員推薦獎勵計畫激勵介紹朋友，利用其對品牌的熱愛帶動口碑擴散
+
+  "Premium Retention":
+    purpose: "穩定關係"
+    recommendation: >-
+      1. 專屬會員維護：提供頂級會員福利，如免運永久有效、專屬客服經理、優先知曉新品等<br>
+      2. 定期滿意度回訪：透過問卷或 VIP 專線了解需求變化和滿意度<br>
+      3. 節奏式驚喜：不定期在重要時刻給予驚喜回饋，採取 soft sell 方式確保主力客群感受到尊重
+
+  "Basic Maintenance":
+    purpose: "周延覆蓋"
+    recommendation: >-
+      1. 定期品牌內容/更新<br>
+      2. 數據補強：利用站內外活動鼓勵提供資訊，如社群投票、有獎調查問卷<br>
+      3. 廣泛觸及：採取內容導向的廣泛溝通，觀察點擊、瀏覽行為以獲知興趣方向<br>
+      4. 行為誘導：設計新客體驗活動，如第一次購物送禮或免運，誘導未購買者下單

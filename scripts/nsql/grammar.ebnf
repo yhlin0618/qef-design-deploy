@@ -1,0 +1,131 @@
+/*
+ * NSQL Grammar in Extended Backus-Naur Form (EBNF)
+ * Implements MP24: Natural SQL Language
+ * Version: 2.0.0
+ * Date: 2025-12-24
+ *
+ * CONFIRMATION PROTOCOL FORMATS (protocol.yaml v3.0):
+ *
+ * 1. PIPELINE FORMAT (DEFAULT) - ArrowStatement
+ *    - Most precise, explicit operation order
+ *    - Example: Orders -> filter(x) -> group(y) -> aggregate(z)
+ *    - Use for: All data queries, multi-step transformations
+ *
+ * 2. SQL-LIKE FORMAT (ALTERNATIVE) - TransformStatement
+ *    - Familiar to SQL users, but implicit operation order
+ *    - Example: transform Orders to Result as sum(x) grouped by y where z
+ *    - Use for: Users who prefer SQL style
+ *
+ * 3. NATURAL LANGUAGE - NaturalLanguageStatement
+ *    - NOTE: This is USER INPUT format, NOT a confirmation format
+ *    - AI parses this and confirms using Pipeline or SQL-like format
+ *    - Example: "show revenue by region"
+ */
+
+/* Top-level NSQL statement */
+NSQLStatement ::= TransformStatement | ArrowStatement | NaturalLanguageStatement
+
+/* Transform-To Pattern (SQL-LIKE FORMAT - Alternative for confirmations)
+ * Use when user explicitly prefers SQL style.
+ * Note: Operation order is implicit (WHERE before GROUP BY assumed).
+ */
+TransformStatement ::= 'transform' Source 'to' Target 'as' Operations [GroupClause] [FilterClause] [OrderClause] [LimitClause]
+
+Source ::= Identifier
+Target ::= Identifier
+Operations ::= Operation {',' Operation}
+Operation ::= Expression ['as' Alias]
+Alias ::= Identifier
+
+GroupClause ::= ('grouped by' | 'group by') Dimensions
+Dimensions ::= Dimension {',' Dimension}
+Dimension ::= Expression
+
+FilterClause ::= 'where' Conditions
+Conditions ::= Condition {LogicalOperator Condition}
+Condition ::= Expression ComparisonOperator Expression
+          | Expression 'in' '[' ValueList ']'
+          | Expression 'is' ['not'] 'null'
+          | 'not' Condition
+
+OrderClause ::= ('ordered by' | 'order by') SortItems
+SortItems ::= SortItem {',' SortItem}
+SortItem ::= Expression ['asc' | 'desc']
+
+LimitClause ::= 'limit' Number
+
+/* Arrow-Operator Pattern (PIPELINE FORMAT - DEFAULT for confirmations)
+ * This is the PRIMARY confirmation format because:
+ * - Operation order is explicit and visible
+ * - Each step is atomic and verifiable
+ * - No hidden assumptions about execution sequence
+ */
+ArrowStatement ::= Source {'->' PipelineOperation}
+
+PipelineOperation ::= 'filter' '(' Conditions ')'
+                  | 'group' '(' Dimensions ')'
+                  | 'aggregate' '(' NamedExpressions ')'
+                  | 'select' '(' Expressions ')'
+                  | 'sort' '(' SortSpecifications ')'
+                  | Identifier '(' [Parameters] ')'
+
+NamedExpressions ::= NamedExpression {',' NamedExpression}
+NamedExpression ::= Identifier '=' Expression
+
+Expressions ::= Expression {',' Expression}
+
+SortSpecifications ::= SortSpecification {',' SortSpecification}
+SortSpecification ::= Expression [',' 'direction' '=' ('asc' | 'desc')]
+
+Parameters ::= Parameter {',' Parameter}
+Parameter ::= [Identifier '='] Expression
+
+/* Natural Language Patterns (USER INPUT - NOT a confirmation format)
+ * These patterns help AI parse user intent.
+ * AI should NEVER use these formats for confirmation.
+ * Instead, AI confirms using Pipeline or SQL-like format.
+ */
+NaturalLanguageStatement ::= ImperativeQuery | CalculationQuery | ComparativeQuery | RankingQuery
+
+ImperativeQuery ::= 'show' Expression 'by' Expression
+CalculationQuery ::= 'calculate' Expression 'for' Expression
+ComparativeQuery ::= 'compare' Expression ('vs' | 'versus') Expression 'by' Expression
+RankingQuery ::= 'find' ['top'] Number Expression 'by' Expression
+
+/* Expression Components */
+Expression ::= Term {AdditiveOperator Term}
+Term ::= Factor {MultiplicativeOperator Factor}
+Factor ::= Primary | UnaryOperator Factor
+Primary ::= Literal | Identifier | FunctionCall | '(' Expression ')'
+
+FunctionCall ::= Identifier '(' [Arguments] ')'
+Arguments ::= Expression {',' Expression}
+
+/* Basic Elements */
+Identifier ::= SimpleName | QualifiedName
+SimpleName ::= Letter {Letter | Digit | '_'}
+QualifiedName ::= SimpleName {'.' SimpleName}
+Literal ::= StringLiteral | NumberLiteral | BooleanLiteral | DateLiteral
+StringLiteral ::= '"' {Character} '"' | "'" {Character} "'"
+NumberLiteral ::= ['-'] Digit {Digit} ['.' Digit {Digit}]
+BooleanLiteral ::= 'true' | 'false'
+DateLiteral ::= 'date' '(' StringLiteral ')'
+
+/* Operators */
+LogicalOperator ::= 'and' | 'or'
+ComparisonOperator ::= '=' | '!=' | '>' | '>=' | '<' | '<='
+AdditiveOperator ::= '+' | '-'
+MultiplicativeOperator ::= '*' | '/' | '%'
+UnaryOperator ::= '-' | 'not'
+
+/* Lexical Elements */
+Letter ::= 'A' | 'B' | ... | 'Z' | 'a' | 'b' | ... | 'z'
+Digit ::= '0' | '1' | ... | '9'
+ValueList ::= Value {',' Value}
+Value ::= Literal
+Character ::= /* any valid character except closing quote */
+Number ::= Digit {Digit}
+
+/* Comments and Whitespace (not part of grammar but for implementation reference) */
+Comment ::= '#' {Character} EndOfLine
+Whitespace ::= ' ' | '\t' | '\n' | '\r'

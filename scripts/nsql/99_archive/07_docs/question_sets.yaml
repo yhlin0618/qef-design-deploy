@@ -1,0 +1,277 @@
+# NSQL Disambiguation Question Sets
+# 
+# This file contains standardized questions for disambiguating NSQL statements.
+# Each question set includes the question text, purpose, answer options,
+# and how to interpret responses.
+
+version: "1.0.0"
+date_updated: "2025-04-04"
+
+# File and Path Questions
+path_disambiguation:
+  - id: "folder_location"
+    question: "What folder are you looking at?"
+    purpose: "Resolve ambiguous folder path"
+    context: "When a relative path could refer to multiple locations"
+    options:
+      - type: "dynamic"
+        source: "list_matching_paths"
+      - label: "Specify another path..."
+        action: "prompt_for_path"
+    follow_up:
+      success: "Using '{selected_path}' as the working directory."
+      failure: "Unable to access '{selected_path}'. Please specify a valid path."
+
+  - id: "file_selection"
+    question: "Which file do you want to use?"
+    purpose: "Resolve ambiguous file reference"
+    context: "When a file name exists in multiple locations"
+    options:
+      - type: "dynamic"
+        source: "list_matching_files"
+        details: "show_file_type_size_and_date"
+      - label: "None of these, specify another file..."
+        action: "prompt_for_file"
+    follow_up:
+      success: "Using the {file_type} file '{selected_file}'."
+      failure: "The {file_type} file '{selected_file}' couldn't be found."
+    parameter_substitution:
+      "xlsx": "Excel"
+      "xls": "Excel"
+      "csv": "CSV"
+      "txt": "text"
+      "json": "JSON"
+      "xml": "XML"
+      "pdf": "PDF"
+
+# Dataset and Table Questions
+schema_disambiguation:
+  - id: "dataset_selection"
+    question: "Which dataset contains the information?"
+    purpose: "Resolve ambiguous schema reference"
+    context: "When a table name exists in multiple schemas"
+    options:
+      - type: "dynamic"
+        source: "list_schemas_with_table"
+        details: "show_table_row_counts_and_freshness"
+      - label: "Specify another dataset..."
+        action: "prompt_for_schema"
+    follow_up:
+      success: "Using information from the '{selected_schema}' dataset."
+      failure: "The '{selected_schema}' dataset doesn't contain this information."
+
+  - id: "table_selection"
+    question: "Which table do you want to use?"
+    purpose: "Resolve ambiguous table reference"
+    context: "When multiple tables match a partial name or description"
+    options:
+      - type: "dynamic"
+        source: "list_matching_tables"
+        details: "show_table_schema_and_columns"
+      - label: "None of these, specify another table..."
+        action: "prompt_for_table"
+    follow_up:
+      success: "Using table '{selected_table}'."
+      failure: "Table '{selected_table}' not found or not accessible."
+
+# Column Questions
+column_disambiguation:
+  - id: "column_selection"
+    question: "Which column do you want to use?"
+    purpose: "Resolve ambiguous column reference"
+    context: "When a column name exists in multiple tables in the query"
+    options:
+      - type: "dynamic"
+        source: "list_columns_from_tables"
+        details: "show_column_data_types"
+      - label: "Specify another column..."
+        action: "prompt_for_column"
+    follow_up:
+      success: "Using column '{selected_column}' from table '{table_name}'."
+      failure: "Column '{selected_column}' not found in the specified tables."
+
+  - id: "join_column_selection"
+    question: "Which columns should be used for joining these tables?"
+    purpose: "Resolve ambiguous join condition"
+    context: "When a join is specified without clear columns"
+    options:
+      - type: "dynamic"
+        source: "suggest_join_columns"
+        details: "show_foreign_key_relationships"
+      - label: "Specify custom join condition..."
+        action: "prompt_for_join_condition"
+    follow_up:
+      success: "Joining on {table1}.{column1} = {table2}.{column2}."
+      failure: "Unable to establish a valid join condition with the specified columns."
+
+# Time Period Questions
+time_disambiguation:
+  - id: "time_period_selection"
+    question: "What time period do you want to analyze?"
+    purpose: "Resolve ambiguous time reference"
+    context: "When a time reference like 'last quarter' needs specific dates"
+    options:
+      - type: "dynamic"
+        source: "generate_time_period_options"
+        details: "show_date_ranges"
+      - label: "Specify custom date range..."
+        action: "prompt_for_date_range"
+    follow_up:
+      success: "Using date range from {start_date} to {end_date}."
+      failure: "Unable to interpret the specified date range."
+
+  - id: "time_granularity"
+    question: "What level of time detail do you want to see?"
+    purpose: "Resolve time aggregation level"
+    context: "When time grouping is ambiguous"
+    options:
+      - label: "Daily"
+        value: "day"
+      - label: "Weekly"
+        value: "week"
+      - label: "Monthly"
+        value: "month"
+      - label: "Quarterly"
+        value: "quarter"
+      - label: "Yearly"
+        value: "year"
+    follow_up:
+      success: "Grouping results by {selected_granularity}."
+
+# Metric Questions
+metric_disambiguation:
+  - id: "sales_metric_selection"
+    question: "What specific sales metric do you want to analyze?"
+    purpose: "Resolve ambiguous 'sales' reference"
+    context: "When 'sales' could refer to different metrics"
+    options:
+      - label: "Revenue (sum of monetary value)"
+        value: "revenue"
+      - label: "Units sold (count of items)"
+        value: "units"
+      - label: "Number of transactions"
+        value: "transactions"
+      - label: "Specify another sales metric..."
+        action: "prompt_for_metric"
+    follow_up:
+      success: "Analyzing sales as {selected_metric}."
+
+  - id: "aggregation_selection"
+    question: "How do you want to aggregate this measure?"
+    purpose: "Resolve ambiguous aggregation"
+    context: "When the aggregation method is unspecified"
+    options:
+      - label: "Sum (total)"
+        value: "sum"
+      - label: "Average (mean)"
+        value: "avg"
+      - label: "Median (middle value)"
+        value: "median"
+      - label: "Minimum"
+        value: "min"
+      - label: "Maximum"
+        value: "max"
+      - label: "Count (number of records)"
+        value: "count"
+      - label: "Count distinct values"
+        value: "count_distinct"
+    follow_up:
+      success: "Using {selected_aggregation} aggregation."
+
+# Intent Questions
+intent_disambiguation:
+  - id: "output_format_selection"
+    question: "How do you want to see the results?"
+    purpose: "Resolve output format preference"
+    context: "When the desired output format is unclear"
+    options:
+      - label: "Table/grid view"
+        value: "table"
+      - label: "Line chart"
+        value: "line_chart"
+      - label: "Bar chart"
+        value: "bar_chart"
+      - label: "Pie chart"
+        value: "pie_chart"
+      - label: "Raw data (for export)"
+        value: "raw"
+    follow_up:
+      success: "Results will be displayed as {selected_format}."
+
+  - id: "filter_confirmation"
+    question: "Do you want to filter the data before analysis?"
+    purpose: "Confirm filtering intent"
+    context: "When filtering might be implied but not specified"
+    options:
+      - label: "No filter, use all data"
+        value: "no_filter"
+      - label: "Yes, add filters..."
+        action: "prompt_for_filters"
+    follow_up:
+      success: "Using {filter_description} for analysis."
+      
+# User Role Detection
+role_detection:
+  - id: "user_role_explicit"
+    question: "To help me communicate better, could you tell me your role?"
+    purpose: "Determine appropriate terminology level"
+    context: "When user role is unknown and language level needs calibration"
+    options:
+      - label: "Business user (I'm focused on insights and results)"
+        value: "business_user"
+      - label: "Analyst (I work with data but I'm not a programmer)"
+        value: "analyst"
+      - label: "Data engineer (I work with data pipelines and structures)"
+        value: "data_engineer"  
+      - label: "Developer/programmer (I write code and build systems)"
+        value: "developer"
+      - label: "I'd rather not specify"
+        value: "unspecified"
+    follow_up:
+      success: "Thanks! I'll adjust my language to match your preferences."
+
+  - id: "technical_detail_preference"
+    question: "How would you prefer technical details to be presented?"
+    purpose: "Fine-tune language level preference"
+    context: "After role detection or when adjusting communication style"
+    options:
+      - label: "Simple explanations without technical jargon"
+        value: "non_technical"
+      - label: "Mix of simple explanations with some technical terms"
+        value: "mixed"
+      - label: "Detailed technical explanations with precise terminology"
+        value: "technical"
+      - label: "Just the results, minimize explanations"
+        value: "minimal"
+    follow_up:
+      success: "I'll adjust my explanations accordingly."
+
+# Implementation and Execution Questions
+execution_disambiguation:
+  - id: "execution_confirmation"
+    question: "Review and confirm this NSQL statement before execution:"
+    purpose: "Confirm final statement interpretation"
+    context: "After resolving all ambiguities, confirm the full interpretation"
+    options:
+      - label: "Proceed with execution"
+        value: "execute"
+      - label: "Modify statement"
+        action: "prompt_for_modification"
+      - label: "Cancel execution"
+        value: "cancel"
+    follow_up:
+      success: "Executing NSQL statement..."
+      failure: "Execution cancelled."
+
+  - id: "permission_confirmation"
+    question: "This operation requires additional permissions. Do you want to proceed?"
+    purpose: "Confirm permission-sensitive operations"
+    context: "When an operation requires elevated permissions"
+    options:
+      - label: "Proceed with elevated permissions"
+        value: "proceed"
+      - label: "Cancel operation"
+        value: "cancel"
+    follow_up:
+      success: "Proceeding with elevated permissions."
+      failure: "Operation cancelled due to permission requirements."

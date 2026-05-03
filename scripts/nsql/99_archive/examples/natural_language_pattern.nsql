@@ -1,0 +1,26 @@
+# NSQL Natural Language Pattern Examples
+
+# Imperative Queries
+show sales by region
+show monthly revenue by product category for last quarter
+show customer count by acquisition channel and signup date
+
+# Calculation Queries
+calculate average order value for premium customers
+calculate churn rate for Q1 2025
+calculate conversion rate by marketing channel
+
+# Comparative Queries
+compare this year vs last year by monthly sales
+compare US vs Canada by customer retention rate
+compare weekend vs weekday by order volume and average basket size
+
+# Ranking Queries
+find top 10 products by revenue
+find top 5 customers by lifetime value for each region
+find bottom 20 SKUs by inventory turnover
+
+# Complex Natural Language Queries
+show year-over-year growth by product category for North America
+calculate customer lifetime value segmented by acquisition source
+find products with reorder rate above category average

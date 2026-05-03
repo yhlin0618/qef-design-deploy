@@ -1,0 +1,254 @@
+# Brand Name Aliases and Standardization Configuration
+# Maps various brand name formats to standardized names and handles unknown brands
+# Format: standard_name: [list of possible variations/aliases]
+
+metadata:
+  version: "v1.0"
+  effective_date: "2025-07-15"
+  description: "Brand name standardization, aliases, and unknown brand handling"
+  maintainer: "ETL Transform Layer - Brand Data Quality"
+  last_updated: "2025-07-15"
+  purpose: "Ensures consistent brand naming across all platforms and data sources"
+
+# ============================================================================
+# SECTION 1: Unknown/Missing Brand Handling
+# ============================================================================
+unknown_brand_handling:
+  # Default value for unknown brands
+  default_unknown_brand: "Unknown Brand"
+  
+  # Various ways "unknown" might appear in data
+  unknown_variations:
+    - ""
+    - " "
+    - "UNKNOWN"
+    - "Unknown"
+    - "unknown"
+    - "N/A"
+    - "NA"
+    - "n/a"
+    - "NULL"
+    - "null"
+    - "None"
+    - "none"
+    - "未知"
+    - "不明"
+    - "無品牌"
+    - "無"
+    - "?"
+    - "??"
+    - "???"
+    - "-"
+    - "--"
+    - "---"
+    - "TBD"
+    - "tbd"
+    - "待確認"
+    - "No Brand"
+    - "no brand"
+    - "Generic"
+    - "generic"
+    - "Other"
+    - "other"
+    - "其他"
+
+# ============================================================================
+# SECTION 2: Brand Name Standardization Rules
+# ============================================================================
+brand_standardization:
+  # Amazon common brands (珠寶盒/皂液器 related)
+  "Clasin Home":
+    - "Clasin"
+    - "CLASIN"
+    - "clasin home"
+    - "CLASIN HOME"
+    - "Clasin-Home"
+  
+  "Homruilink":
+    - "HOMRUILINK"
+    - "homruilink"
+    - "Homrui Link"
+    - "Homrui-Link"
+  
+  "SimpleHouseware":
+    - "Simple Houseware"
+    - "SIMPLE HOUSEWARE"
+    - "simple houseware"
+    - "SimpleHouse"
+    - "Simple House"
+  
+  "UMBRA":
+    - "umbra"
+    - "Umbra"
+    - "UMBRA®"
+    - "Umbra®"
+  
+  "InterDesign":
+    - "Inter Design"
+    - "INTER DESIGN"
+    - "inter design"
+    - "InterDesign®"
+    - "Inter-Design"
+  
+  # Common jewelry organizer brands
+  "SONGMICS":
+    - "songmics"
+    - "Songmics"
+    - "SONG MICS"
+    - "Song Mics"
+  
+  "BEWISHOME":
+    - "bewishome"
+    - "Bewishome"
+    - "BEWIS HOME"
+    - "Bewis Home"
+  
+  # Common soap dispenser brands
+  "Secura":
+    - "SECURA"
+    - "secura"
+  
+  "HAYLEY CHERIE":
+    - "Hayley Cherie"
+    - "hayley cherie"
+    - "HAYLEY-CHERIE"
+    - "Hayley-Cherie"
+
+# ============================================================================
+# SECTION 3: Brand Cleaning Rules
+# ============================================================================
+cleaning_rules:
+  # Remove common unwanted patterns
+  remove_patterns:
+    - "®"
+    - "™"
+    - "©"
+    - "Co."
+    - "Inc."
+    - "LLC"
+    - "Ltd."
+    - "LTD"
+    - "Corp."
+    - "Corporation"
+    - "Company"
+    - "公司"
+    - "有限公司"
+    - "股份有限公司"
+  
+  # Trim whitespace and normalize spacing
+  normalize_spacing: true
+  
+  # Convert to title case (capitalize first letter of each word)
+  title_case: true
+  
+  # Remove leading/trailing special characters
+  trim_special_chars: [".", ",", "-", "_", "(", ")", "[", "]"]
+
+# ============================================================================
+# SECTION 4: Platform-Specific Brand Mappings
+# ============================================================================
+platform_specific:
+  amazon:
+    # Amazon-specific brand variations
+    brand_mappings:
+      "Amazon Basics":
+        - "AmazonBasics"
+        - "Amazon Basic"
+        - "amazon basics"
+        - "AMAZON BASICS"
+      
+      "Amazon Choice":
+        - "Amazon's Choice"
+        - "amazons choice"
+        - "AMAZON CHOICE"
+  
+  ebay:
+    # eBay-specific brand variations
+    brand_mappings:
+      "Generic":
+        - "generic"
+        - "GENERIC"
+        - "Unbranded"
+        - "unbranded"
+        - "UNBRANDED"
+
+# ============================================================================
+# SECTION 5: Quality Scoring Rules
+# ============================================================================
+quality_scoring:
+  # Brand quality indicators
+  high_quality_indicators:
+    - "has_registered_trademark"    # Contains ® or ™
+    - "consistent_formatting"       # Proper capitalization
+    - "known_manufacturer"          # In standardization list
+    - "complete_brand_name"         # Not abbreviated
+  
+  low_quality_indicators:
+    - "contains_special_chars"      # Excessive punctuation
+    - "all_caps"                   # ALL UPPERCASE
+    - "contains_numbers"           # Has random numbers
+    - "mixed_languages"            # Multiple language scripts
+    - "too_short"                  # Less than 3 characters
+    - "too_long"                   # More than 50 characters
+  
+  # Quality score thresholds
+  thresholds:
+    excellent: 95    # Premium, well-known brands
+    good: 80         # Standard branded products
+    acceptable: 60   # Generic but identifiable brands
+    poor: 40         # Low quality or questionable brands
+    unacceptable: 20 # Should be flagged for review
+
+# ============================================================================
+# SECTION 6: Validation Rules
+# ============================================================================
+validation_rules:
+  # Required validations before using brand name
+  required_checks:
+    - "not_empty"
+    - "not_numeric_only"
+    - "reasonable_length"
+    - "contains_letters"
+  
+  # Optional validations for quality assessment
+  optional_checks:
+    - "trademark_status"
+    - "manufacturer_website"
+    - "brand_registry"
+  
+  # Automatic corrections
+  auto_correct:
+    enabled: true
+    confidence_threshold: 0.8  # Minimum confidence for auto-correction
+    
+  # Manual review triggers
+  manual_review_triggers:
+    - "quality_score_below_threshold"
+    - "new_brand_not_in_database"
+    - "conflicting_brand_information"
+    - "suspicious_brand_patterns"
+
+# ============================================================================
+# SECTION 7: Usage Instructions
+# ============================================================================
+usage_instructions:
+  description: |
+    This configuration file should be used by the brand standardization functions
+    to ensure consistent brand naming across all ETL processes.
+  
+  loading_example: |
+    # R code to load this configuration
+    brand_config <- yaml::read_yaml("list_brandname_aliases.yaml")
+    
+    # Access unknown brand handling
+    default_unknown <- brand_config$unknown_brand_handling$default_unknown_brand
+    
+    # Access standardization rules
+    brand_mappings <- brand_config$brand_standardization
+  
+  integration_points:
+    - "fn_transform_competitor_products.R"
+    - "fn_import_competitor_products.R" 
+    - "fn_stage_competitor_products.R"
+    - "Brand data quality assessment functions"
+    - "Cross-platform brand reconciliation" 

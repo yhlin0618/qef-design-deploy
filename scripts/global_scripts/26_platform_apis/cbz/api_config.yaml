@@ -1,0 +1,124 @@
+# Cyberbiz API Configuration
+# Platform ID: cbz
+# Version: 2.0
+# Last Updated: 2025-08-27
+
+platform:
+  platform_id: "cbz"
+  name: "Cyberbiz"
+  version: "2.0"
+  active: true
+  description: "Cyberbiz e-commerce platform API integration"
+  
+api:
+  base_url: "https://app-store-api.cyberbiz.io/v1"
+  auth_type: "bearer_token"
+  timeout: 30  # seconds
+  
+  endpoints:
+    customers:
+      path: "/customers"
+      method: "GET"
+      rate_limit: 100  # requests per minute
+      cache_ttl: 3600  # seconds
+      pagination:
+        type: "page"
+        per_page: 50
+        page_param: "page"
+        
+    orders:
+      path: "/orders"
+      method: "GET"
+      rate_limit: 60
+      cache_ttl: 300
+      pagination:
+        type: "page"
+        per_page: 50
+        page_param: "page"
+        
+    products:
+      path: "/products"
+      method: "GET"
+      rate_limit: 120
+      cache_ttl: 7200
+      pagination:
+        type: "page"
+        per_page: 100
+        page_param: "page"
+        
+    inventory:
+      path: "/inventory"
+      method: "GET"
+      rate_limit: 60
+      cache_ttl: 600
+      
+authentication:
+  bearer_token:
+    env_var: "CYBERBIZ_API_TOKEN"
+    header: "Authorization"
+    prefix: "Bearer"
+    
+rate_limiting:
+  strategy: "token_bucket"  # token_bucket, sliding_window
+  max_requests: 5000
+  per_period: 3600  # seconds (1 hour)
+  retry_after: true
+  delay_between_requests: 0.2  # seconds
+  
+error_handling:
+  retry_count: 3
+  backoff_strategy: "exponential"  # linear, exponential
+  initial_wait: 1  # seconds
+  max_wait: 60  # seconds
+  timeout: 30  # seconds per request
+  
+  retry_on_status:
+    - 429  # Too Many Requests
+    - 500  # Internal Server Error
+    - 502  # Bad Gateway
+    - 503  # Service Unavailable
+    - 504  # Gateway Timeout
+    
+data_mapping:
+  customers:
+    # API field -> Standard field
+    id: "customer_id"
+    email: "customer_email"
+    name: "customer_name"
+    phone: "customer_phone"
+    created_at: "customer_created_date"
+    updated_at: "customer_updated_date"
+    
+  orders:
+    id: "order_id"
+    order_number: "order_number"
+    customer_id: "customer_id"
+    created_at: "order_date"
+    total: "total_amount"
+    status: "order_status"
+    shipping_address: "shipping_address"
+    shipping_city: "shipping_city"
+    shipping_zip: "shipping_postal_code"
+    
+  products:
+    id: "product_id"
+    sku: "product_sku"
+    name: "product_name"
+    price: "unit_price"
+    stock: "inventory_quantity"
+    category: "product_category"
+    
+response_format:
+  type: "json"
+  encoding: "UTF-8"
+  
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  file: "logs/cbz_api.log"
+  max_size: "10MB"
+  
+cache:
+  enabled: true
+  type: "memory"  # memory, disk, redis
+  max_entries: 1000
+  ttl: 3600  # default TTL in seconds

@@ -1,0 +1,53 @@
+/* ======================================================
+   Minimal Navbar CSS 
+   - Following P99: Single-Line UI Elements Principle
+   - Following P101: Minimal CSS Usage Principle
+   ====================================================== */
+
+/* Base styles for custom navbar content */
+.navbarTab-content {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  line-height: 40px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+/* Icon styles */
+.navbarTab-content i {
+  margin-right: 5px;
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+/* Text styles */
+.navbarTab-content span {
+  vertical-align: middle;
+  line-height: inherit;
+}
+
+/* ======================================================
+   Second-level Navigation Styles
+   - Following P99: Single-Line UI Elements Principle
+   - Following P101: Minimal CSS Usage Principle
+   ====================================================== */
+
+/* Container for second-level navigation */
+.second-level-nav-container {
+  margin-bottom: 15px;
+}
+
+/* Style for second-level navigation buttons to ensure consistent height */
+.second-level-nav-container .btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  white-space: nowrap;
+}
+
+/* Icon alignment in buttons */
+.second-level-nav-container .btn i {
+  margin-right: 5px;
+}

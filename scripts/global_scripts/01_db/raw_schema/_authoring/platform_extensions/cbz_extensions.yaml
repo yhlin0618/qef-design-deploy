@@ -1,0 +1,280 @@
+# ==============================================================================
+# cbz_extensions.yaml  -  cbz Platform Extension (MP157 Layer 1)
+# ==============================================================================
+# Bound by:
+#   - MP102 v1.2  (ETL Output Standardization, MP156 Tier-2 Schema Contract)
+#   - MP156       (Two-Tier Normativity, Category A - Schema Contract binding)
+#   - MP157       (Two-Layer YAML Authoring, Layer 1 platform extension)
+#   - MP158       (Glue-Driven Raw Layer Extensibility, axis 2 Step 1 target)
+#   - MP159       (Glue Authoring Boundary Immutability - immutable during bridge authoring)
+#   - SO_R038     (Schema Authoring YAML Naming Convention)
+#
+# Most recent significant edit: spectra change qef-product-master-redesign
+#   Phase 9 task 9.0e (Layer 1 binding header, 2026-04-28).
+#
+# Change discipline (same as core_schemas.yaml):
+#   - IC_P002 cross-company verification + Verified: trailer required.
+#   - Edits during a /glue-bridge skill flow are forbidden (MP159).
+#   - Adding a new field-level key requires updating _meta_schema.yaml.
+# ==============================================================================
+
+# Cyberbiz Platform Extensions
+# Following MP102: ETL Output Standardization Principle
+# Platform ID: cbz
+# Last Updated: 2025-08-28
+
+# These fields extend the core schemas for Cyberbiz-specific data
+# All extension fields MUST use the cbz_ prefix
+
+sales:
+  description: "Cyberbiz-specific sales transaction fields"
+  extends: "core_sales_v1"
+  fields:
+    cbz_shop_id:
+      type: VARCHAR
+      required: false
+      description: "Cyberbiz shop identifier (for multi-shop accounts)"
+      source: "shop_id from API"
+    
+    cbz_payment_id:
+      type: VARCHAR
+      required: false
+      description: "Payment gateway transaction ID"
+      source: "payment.transaction_id"
+    
+    cbz_payment_method:
+      type: VARCHAR
+      required: false
+      description: "Payment method used"
+      source: "payment_method"
+      examples: ["credit_card", "line_pay", "bank_transfer"]
+    
+    cbz_member_level:
+      type: VARCHAR
+      required: false
+      description: "Customer membership tier"
+      source: "member.level or member_tier"
+      examples: ["bronze", "silver", "gold", "platinum"]
+    
+    cbz_utm_source:
+      type: VARCHAR
+      required: false
+      description: "Marketing attribution - traffic source"
+      source: "utm_source"
+    
+    cbz_utm_medium:
+      type: VARCHAR
+      required: false
+      description: "Marketing attribution - medium"
+      source: "utm_medium"
+    
+    cbz_utm_campaign:
+      type: VARCHAR
+      required: false
+      description: "Marketing attribution - campaign"
+      source: "utm_campaign"
+    
+    cbz_coupon_code:
+      type: VARCHAR
+      required: false
+      description: "Applied coupon or discount code"
+      source: "coupon_code or discount_code"
+    
+    cbz_discount_amount:
+      type: NUMERIC
+      required: false
+      description: "Total discount applied"
+      source: "discount_amount"
+    
+    cbz_shipping_method:
+      type: VARCHAR
+      required: false
+      description: "Shipping method selected"
+      source: "shipping.method"
+    
+    cbz_shipping_fee:
+      type: NUMERIC
+      required: false
+      description: "Shipping cost"
+      source: "shipping.fee"
+    
+    cbz_order_status:
+      type: VARCHAR
+      required: false
+      description: "Current order status"
+      source: "status"
+      examples: ["pending", "processing", "shipped", "delivered", "cancelled"]
+    
+    cbz_order_note:
+      type: TEXT
+      required: false
+      description: "Customer order notes"
+      source: "note or remark"
+
+customers:
+  description: "Cyberbiz-specific customer fields"
+  extends: "core_customers_v1"
+  fields:
+    cbz_member_id:
+      type: VARCHAR
+      required: false
+      description: "Cyberbiz member system ID"
+      source: "member.id"
+    
+    cbz_member_level:
+      type: VARCHAR
+      required: false
+      description: "Current membership tier"
+      source: "member.level"
+    
+    cbz_points_balance:
+      type: INTEGER
+      required: false
+      description: "Current loyalty points balance"
+      source: "points.balance"
+    
+    cbz_phone:
+      type: VARCHAR
+      required: false
+      description: "Customer phone number"
+      privacy: "PII - encrypt if storing"
+    
+    cbz_gender:
+      type: VARCHAR
+      required: false
+      description: "Customer gender"
+      source: "gender"
+    
+    cbz_birthdate:
+      type: VARCHAR
+      required: false
+      description: "Customer birthdate"
+      privacy: "PII - handle with care"
+    
+    cbz_referral_code:
+      type: VARCHAR
+      required: false
+      description: "Referral code if referred"
+      source: "referral.code"
+    
+    cbz_tags:
+      type: TEXT
+      required: false
+      description: "Customer tags (JSON array)"
+      source: "tags"
+      format: "JSON array"
+
+products:
+  description: "Cyberbiz-specific product fields"
+  extends: "core_products_v1"
+  fields:
+    cbz_variant_id:
+      type: VARCHAR
+      required: false
+      description: "Product variant identifier"
+      source: "variant.id"
+    
+    cbz_barcode:
+      type: VARCHAR
+      required: false
+      description: "Product barcode"
+      source: "barcode"
+    
+    cbz_cost:
+      type: NUMERIC
+      required: false
+      description: "Product cost"
+      source: "cost"
+    
+    cbz_weight:
+      type: NUMERIC
+      required: false
+      description: "Product weight in grams"
+      source: "weight"
+    
+    cbz_stock_quantity:
+      type: INTEGER
+      required: false
+      description: "Current stock level"
+      source: "stock.quantity"
+    
+    cbz_vendor:
+      type: VARCHAR
+      required: false
+      description: "Product vendor/supplier"
+      source: "vendor"
+    
+    cbz_tags:
+      type: TEXT
+      required: false
+      description: "Product tags (JSON array)"
+      source: "tags"
+      format: "JSON array"
+    
+    cbz_seo_title:
+      type: VARCHAR
+      required: false
+      description: "SEO meta title"
+      source: "seo.title"
+    
+    cbz_seo_description:
+      type: TEXT
+      required: false
+      description: "SEO meta description"
+      source: "seo.description"
+
+orders:
+  description: "Cyberbiz order header table (platform-specific)"
+  platform_specific: true
+  fields:
+    cbz_order_id:
+      type: VARCHAR
+      required: true
+      description: "Order header ID"
+      primary_key: true
+    
+    cbz_order_number:
+      type: VARCHAR
+      required: true
+      description: "Human-readable order number"
+    
+    cbz_customer_id:
+      type: VARCHAR
+      required: true
+      description: "Customer placing order"
+    
+    cbz_order_date:
+      type: TIMESTAMP
+      required: true
+      description: "Order creation timestamp"
+    
+    cbz_subtotal:
+      type: NUMERIC
+      required: true
+      description: "Order subtotal before tax/shipping"
+    
+    cbz_tax_amount:
+      type: NUMERIC
+      required: false
+      description: "Tax amount"
+    
+    cbz_shipping_amount:
+      type: NUMERIC
+      required: false
+      description: "Shipping cost"
+    
+    cbz_discount_amount:
+      type: NUMERIC
+      required: false
+      description: "Total discount"
+    
+    cbz_total_amount:
+      type: NUMERIC
+      required: true
+      description: "Final order total"
+    
+    cbz_currency:
+      type: VARCHAR(3)
+      required: false
+      description: "Currency code (TWD, USD, etc)"
+      default: "TWD"

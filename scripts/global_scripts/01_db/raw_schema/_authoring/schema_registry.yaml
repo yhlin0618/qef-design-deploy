@@ -1,0 +1,440 @@
+# ETL Schema Registry
+# Following MP102: ETL Output Standardization Principle
+# Version: 1.0
+# Last Updated: 2025-08-28
+
+registry:
+  version: "1.1"
+  created: "2025-08-28"
+  last_modified: "2025-11-02"
+  author: "Claude"
+  principle: "MP102"
+  
+  description: |
+    Central registry for all ETL output schemas across platforms.
+    Defines core schemas that all platforms must implement,
+    and documents platform-specific extensions.
+  
+  platforms:
+    cbz:
+      platform_id: "cbz"
+      name: "Cyberbiz"
+      description: "Cyberbiz e-commerce platform"
+      active: true
+      api_available: true
+      etl_scripts:
+        sales:
+          - "cbz_ETL_sales_0IM.R"
+          - "cbz_ETL_sales_1ST.R"
+          - "cbz_ETL_sales_2TR.R"
+        customers:
+          - "cbz_ETL_customers_0IM.R"
+          - "cbz_ETL_customers_1ST.R"
+          - "cbz_ETL_customers_2TR.R"
+        orders:
+          - "cbz_ETL_orders_0IM.R"
+          - "cbz_ETL_orders_1ST.R"
+          - "cbz_ETL_orders_2TR.R"
+        products:
+          - "cbz_ETL_products_0IM.R"
+          - "cbz_ETL_products_1ST.R"
+          - "cbz_ETL_products_2TR.R"
+      etl_completion_status:
+        sales:
+          phases: {0IM: true, 1ST: true, 2TR: true, 3DRV: false}
+          last_updated: "2025-10-31"
+          status: "production_ready"
+        customers:
+          phases: {0IM: true, 1ST: true, 2TR: true, 3DRV: false}
+          last_updated: "2025-11-02"
+          status: "production_ready"
+        orders:
+          phases: {0IM: true, 1ST: true, 2TR: true, 3DRV: false}
+          last_updated: "2025-11-02"
+          status: "production_ready"
+        products:
+          phases: {0IM: true, 1ST: true, 2TR: true, 3DRV: false}
+          last_updated: "2025-11-02"
+          status: "production_ready"
+      coordinator_patterns:
+        - name: "cbz_ETL_shared_0IM.R"
+          type: "API Coordinator"
+          description: "Single API call distributing to multiple data types"
+          data_types_served: ["customers", "orders", "sales", "products"]
+          import_source_marker: "SHARED_API"
+          note: "Optional efficiency pattern - data still uses individual 1ST/2TR pipelines"
+      transformed_schema_compliance:
+        conforms_to: "transformed_schemas.yaml v1.0"
+        compliance_level: "100%"
+        last_validated: "2025-11-02"
+        validation_notes: "All 2TR outputs conform to cross-platform standards"
+      outputs:
+        - table_name: "df_cbz_sales___raw"
+          table_type: "sales"
+          layer: "raw_data"
+          conforms_to: "core_sales_v1"
+          has_extensions: true
+          extension_prefix: "cbz_"
+        - table_name: "df_cbz_customers___raw"
+          table_type: "customers"
+          layer: "raw_data"
+          conforms_to: "core_customers_v1"
+          has_extensions: true
+          extension_prefix: "cbz_"
+        - table_name: "df_cbz_orders___raw"
+          table_type: "orders"
+          layer: "raw_data"
+          conforms_to: null  # Platform-specific, no core schema
+          has_extensions: false
+          description: "Cyberbiz order header data"
+        - table_name: "df_cbz_products___raw"
+          table_type: "products"
+          layer: "raw_data"
+          conforms_to: "core_products_v1"
+          has_extensions: true
+          extension_prefix: "cbz_"
+    
+    eby:
+      platform_id: "eby"
+      name: "eBay"
+      description: "eBay marketplace platform"
+      active: true
+      api_available: false
+      etl_scripts:
+        sales:
+          - "eby_ETL_sales_0IM.R"
+          - "eby_ETL_sales_1ST.R"
+          - "eby_ETL_sales_2TR.R"
+        customers:
+          - "eby_ETL_customers_0IM.R"
+          - "eby_ETL_customers_1ST.R"
+          - "eby_ETL_customers_2TR.R"
+        orders:
+          - "eby_ETL_orders_0IM.R"
+          - "eby_ETL_orders_1ST.R"
+          - "eby_ETL_orders_2TR.R"
+        products:
+          - "eby_ETL_products_0IM.R"
+          - "eby_ETL_products_1ST.R"
+          - "eby_ETL_products_2TR.R"
+      outputs:
+        - table_name: "df_eby_sales___raw"
+          table_type: "sales"
+          layer: "raw_data"
+          conforms_to: "core_sales_v1"
+          has_extensions: true
+          extension_prefix: "eby_"
+          notes: "Imported from CSV/Excel files"
+        - table_name: "df_eby_customers___raw"
+          table_type: "customers"
+          layer: "raw_data"
+          conforms_to: "core_customers_v1"
+          has_extensions: true
+          extension_prefix: "eby_"
+        - table_name: "df_eby_orders___raw"
+          table_type: "orders"
+          layer: "raw_data"
+          conforms_to: "core_orders_v1"
+          has_extensions: true
+          extension_prefix: "eby_"
+        - table_name: "df_eby_products___raw"
+          table_type: "products"
+          layer: "raw_data"
+          conforms_to: "core_products_v1"
+          has_extensions: true
+          extension_prefix: "eby_"
+    
+    amz:
+      platform_id: "amz"
+      name: "Amazon"
+      description: "Amazon marketplace platform (QEF_DESIGN)"
+      active: true
+      api_available: true
+      etl_scripts:
+        sales:
+          - "amz_ETL_sales_0IM.R"
+          - "amz_ETL_sales_1ST.R"
+          - "amz_ETL_sales_2TR.R"
+        keys:
+          - "amz_ETL_keys_0IM.R"
+        reviews:
+          - "amz_ETL_reviews_0IM.R"
+          - "amz_ETL_reviews_1ST.R"
+          - "amz_ETL_reviews_2TR.R"
+        competitor_sales:
+          - "amz_ETL_competitor_sales_0IM.R"
+        keepa:
+          - "amz_ETL_keepa_0IM.R"
+        demographic:
+          - "amz_ETL_demographic_0IM.R"
+        sku_mapping:
+          - "amz_ETL_sku_mapping_0IM.R"
+        product_profiles:
+          - "amz_ETL_product_profiles_0IM.R"
+          - "amz_ETL_product_profiles_1ST.R"
+          - "amz_ETL_product_profiles_2TR.R"
+        competitor_ids:
+          - "amz_ETL_competitor_ids_0IM.R"
+          - "amz_ETL_competitor_ids_1ST.R"
+          - "amz_ETL_competitor_ids_2TR.R"
+        comment_properties:
+          - "amz_ETL_comment_properties_0IM.R"
+          - "amz_ETL_comment_properties_1ST.R"
+          - "amz_ETL_comment_properties_2TR.R"
+        product_categories:
+          - "amz_ETL_product_categories_0IM.R"
+        holidays:
+          - "amz_ETL_holidays_0IM.R"
+        promotion_codebook:
+          - "amz_ETL_promotion_codebook_0IM.R"
+        promotions:
+          - "amz_ETL_promotions_0IM.R"
+        term_mapping:
+          - "amz_ETL_term_mapping_0IM.R"
+      outputs:
+        - table_name: "df_amz_sales___raw"
+          table_type: "sales"
+          layer: "raw_data"
+          conforms_to: "core_sales_v1"
+          has_extensions: true
+          extension_prefix: "amz_"
+        - table_name: "df_amz_customers___raw"
+          table_type: "customers"
+          layer: "raw_data"
+          conforms_to: "core_customers_v1"
+          has_extensions: true
+          extension_prefix: "amz_"
+        - table_name: "df_amz_orders___raw"
+          table_type: "orders"
+          layer: "raw_data"
+          conforms_to: "core_orders_v1"
+          has_extensions: true
+          extension_prefix: "amz_"
+        - table_name: "df_amz_products___raw"
+          table_type: "products"
+          layer: "raw_data"
+          conforms_to: "core_products_v1"
+          has_extensions: true
+          extension_prefix: "amz_"
+        - table_name: "df_amz_reviews___raw"
+          table_type: "reviews"
+          layer: "raw_data"
+          conforms_to: "core_reviews_v1"
+          has_extensions: true
+          extension_prefix: "amz_"
+
+      # ================================================================
+      # Input Sources (DM_R037 v3.0 Section 6)
+      # Documents all available data sources for this platform
+      # ================================================================
+      input_sources:
+        last_scanned: "2026-02-07"
+
+        google_sheets:
+          coding_sheet:
+            sheet_id: "1istNxsgutIfTC9faLM7HdsQzfnphHXLXtahGKYN5oCA"
+            total_tabs: 39
+            tabs:
+              # === Product Profile Tabs (12 product lines x 2 = 24 tabs) ===
+              # Pattern: {product_line_chinese}＿{product_line_english}
+              # Each product line has a profile tab + a levels (水準表) tab
+              - tab_name_pattern: "{product_line_chinese}＿{product_line_english}"
+                count: 12
+                category: "data"
+                etl_source_key: "product_profiles"
+                status: "mapped"
+                description: "Product profile coding (0/1 attributes) per product line"
+                key_columns: ["ASIN", "brand", "binary product attributes"]
+                example_tab: "安全眼鏡＿hunting-safety-glasses"
+
+              - tab_name_pattern: "{product_line_chinese}＿{product_line_english}水準表"
+                count: 12
+                category: "codebook"
+                etl_source_key: "comment_properties"
+                status: "mapped"
+                description: "Comment property levels definition per product line"
+                key_columns: ["property_id", "property_name", "levels"]
+                example_tab: "安全眼鏡＿hunting-safety-glasses水準表"
+
+              # === Reference / Data Tabs ===
+              - tab_name: "產品對照表"
+                category: "data"
+                etl_source_key: "competitor_ids"
+                status: "mapped"
+                description: "Competitor product cross-reference table"
+                key_columns: ["product_line", "brand", "ASIN/product_number"]
+
+              - tab_name: "產品類別彙整表"
+                category: "data"
+                etl_source_key: "product_categories"
+                status: "mapped"
+                description: "Product category summary with competitor counts"
+                key_columns: ["產品類別", "QEF產品數", "競爭對手數"]
+
+              - tab_name: "Promotion"
+                category: "data"
+                etl_source_key: "promotions"
+                status: "mapped"
+                description: "SKU-level promotion records"
+                key_columns: ["平台", "sku", "促銷狀態", "活動類型", "折扣%"]
+
+              # === Codebook / Metadata Tabs ===
+              - tab_name: "中英文名稱對照表"
+                category: "metadata"
+                etl_source_key: "term_mapping"
+                status: "mapped"
+                description: "Chinese-English term mapping for column names and labels"
+                key_columns: ["中文", "英文"]
+
+              - tab_name: "Holiday"
+                category: "metadata"
+                etl_source_key: "holidays"
+                status: "mapped"
+                description: "Holiday definitions with before/after promotional day counts"
+                key_columns: ["Name", "Before_Days", "After_Days"]
+
+              - tab_name: "Promotion Codebook"
+                category: "codebook"
+                etl_source_key: "promotion_codebook"
+                status: "mapped"
+                description: "Promotion type definitions and coding rules"
+                key_columns: ["促銷活動名稱", "定義", "Coding", "Dummies"]
+
+              # === Unmapped Tabs ===
+              - tab_name: "Product Line"
+                category: "metadata"
+                etl_source_key: "unmapped"
+                status: "unmapped"
+                description: "Product line definitions (ISSUE #146: only 2/12 entries filled, names misaligned)"
+                key_columns: ["product_line_id", "name_chinese", "name_english"]
+                note: "See changelog/issues/open/issue_146_product_line_tab_alignment.md"
+
+              - tab_name: "Overview"
+                category: "utility"
+                etl_source_key: "unmapped"
+                status: "unmapped"
+                description: "Dashboard overview sheet, not for ETL import"
+
+              - tab_name: "進度表"
+                category: "utility"
+                etl_source_key: "unmapped"
+                status: "unmapped"
+                description: "Project tracking sheet, not for ETL import"
+
+              # === Backup Tabs (tabs ending with _原) ===
+              - tab_name_pattern: "*_原"
+                category: "backup"
+                etl_source_key: "unmapped"
+                status: "unmapped"
+                description: "Backup copies of original tabs, not for ETL import"
+
+        rawdata:
+          - source_name: "amazon_sales"
+            etl_source_key: "sales"
+            status: "mapped"
+            rawdata_pattern: "amazon_sales/*/*.xlsx"
+            description: "Amazon sales transaction exports (monthly Excel files)"
+
+          - source_name: "keys"
+            etl_source_key: "keys"
+            status: "mapped"
+            rawdata_path: "KEYS.xlsx"
+            description: "SKU-ASIN mapping with cost data"
+
+          - source_name: "amazon_reviews"
+            etl_source_key: "reviews"
+            status: "mapped"
+            rawdata_pattern: "amazon_reviews/**/*"
+            description: "Amazon product review exports"
+
+          - source_name: "competitor_sales"
+            etl_source_key: "competitor_sales"
+            status: "mapped"
+            rawdata_pattern: "competitor_sales/**/*"
+            description: "Competitor sales data from external sources"
+
+          - source_name: "keepa"
+            etl_source_key: "keepa"
+            status: "mapped"
+            rawdata_pattern: "Product sales rank*/*/*.xlsx"
+            description: "Keepa product sales rank tracking data"
+
+          - source_name: "demographic"
+            etl_source_key: "demographic"
+            status: "mapped"
+            rawdata_pattern: "amazon_demographic/*.csv"
+            description: "Amazon demographic data (CSV format)"
+
+          - source_name: "sku_mapping"
+            etl_source_key: "sku_mapping"
+            status: "mapped"
+            rawdata_path: "SKUtoeBay numbers/SKUtoASIN number.xlsx"
+            description: "SKU to eBay/ASIN number cross-platform mapping"
+  
+  core_schemas:
+    - schema_id: "core_sales_v1"
+      version: "1.0"
+      file: "core_schemas.yaml#sales"
+      description: "Core sales transaction schema"
+      required_fields: 10
+      
+    - schema_id: "core_customers_v1"
+      version: "1.0"
+      file: "core_schemas.yaml#customers"
+      description: "Core customer data schema"
+      required_fields: 6
+      
+    - schema_id: "core_orders_v1"
+      version: "1.0"
+      file: "core_schemas.yaml#orders"
+      description: "Core order header schema"
+      required_fields: 9
+      
+    - schema_id: "core_products_v1"
+      version: "1.0"
+      file: "core_schemas.yaml#products"
+      description: "Core product catalog schema"
+      required_fields: 6
+      
+    - schema_id: "core_reviews_v1"
+      version: "1.0"
+      file: "core_schemas.yaml#reviews"
+      description: "Core review/rating schema"
+      required_fields: 8
+
+  validation_rules:
+    - rule: "All platform_ids must be exactly 3 lowercase letters"
+      reference: "MP092"
+    - rule: "All tables must include platform_id field"
+      reference: "MP102"
+    - rule: "All tables must include import_timestamp"
+      reference: "MP102"
+    - rule: "Platform extensions must use platform_id prefix"
+      reference: "MP102"
+    - rule: "Core fields must match defined data types"
+      reference: "DM_R027"
+
+  migration_status:
+    cbz:
+      status: "production_ready"
+      last_validated: "2025-11-02"
+      milestone: "Milestone 2 Complete"
+      etl_phases_complete: ["0IM", "1ST", "2TR"]
+      data_types_complete: ["sales", "customers", "orders", "products"]
+      transformed_schemas_compliance: "100%"
+      coordinator_patterns: ["shared_0IM"]
+      notes: "Complete ETL architecture implemented. All 2TR outputs conform to transformed_schemas.yaml. Ready for 3DRV (Derivation) phase."
+      completion_report: "scripts/update_scripts/ETL/cbz/MILESTONE_2_COMPLETION_REPORT.md"
+    eby:
+      status: "partial"
+      last_validated: "2025-08-28"
+      notes: "Core fields present, extensions need prefixing"
+    amz:
+      status: "active_development"
+      last_validated: "2026-02-07"
+      milestone: "DM_R037 v3.0 Config Migration Complete"
+      etl_sources_count: 15
+      etl_sources_with_0im: ["sales", "keys", "reviews", "competitor_sales", "keepa", "demographic", "sku_mapping", "product_profiles", "competitor_ids", "comment_properties"]
+      etl_sources_config_only: ["product_categories", "holidays", "promotion_codebook", "promotions", "term_mapping"]
+      input_sources_documented: true
+      notes: "All 15 etl_sources migrated to config-driven (DM_R037 v3.0). 0IM scripts created. 1ST/2TR exist for sales, reviews, product_profiles, competitor_ids, comment_properties."

@@ -1,0 +1,101 @@
+# Column Name Aliases Configuration
+# Maps standard column names to their possible aliases/variants
+# Format: standard_name: [list of possible original names]
+
+metadata:
+  version: "v1.0"
+  effective_date: "2025-07-13"
+  description: "Standard column names and their aliases for data transformation"
+  maintainer: "ETL Transform Layer"
+  last_updated: "2025-07-13"
+
+standard_names:
+  # Basic product information
+  product_brand:
+    - "pin_pai"
+    - "brand"
+    - "品牌"
+    - "brand_name"
+    - "manufacturer"
+    - "廠商"
+  
+  product_id:
+    - "asin"
+    - "product_code"
+    - "product_id"
+    - "商品編號"
+    - "product_identifier"
+    - "sku"
+    - "商品代碼"
+  
+  product_title:
+    - "chan_pin_ming_cheng"
+    - "shang_pin_ming_cheng"
+    - "title"
+    - "name"
+    - "產品名稱"
+    - "商品名稱"
+    - "product_name"
+    - "product_name"
+    - "商品標題"
+  
+  # Pricing and metrics
+  price:
+    - "jia_ge"
+    - "價格"
+    - "price_amount"
+    - "cost"
+    - "unit_price"
+    - "售價"
+    - "金額"
+  
+  rating:
+    - "gu_ke_ping_fen"
+    - "customer_rating"
+    - "評分"
+    - "star_rating"
+    - "review_rating"
+    - "顧客評分"
+    - "平均評分"
+  
+  num_rating:
+    - "gu_ke_ping_fen_ze_shu"
+    - "rating_count"
+    - "評分數量"
+    - "review_count"
+    - "評價數量"
+    - "評論數"
+    - "顧客評分則數"
+
+# Additional metadata for validation and documentation
+validation:
+  required_fields:
+    - "product_id"
+    - "product_title"
+  
+  optional_fields:
+    - "product_brand"
+    - "price"
+    - "rating"
+    - "num_rating"
+
+# Field categories for organization
+categories:
+  basic_info:
+    - "product_brand"
+    - "product_id"
+    - "product_title"
+  
+  metrics:
+    - "price"
+    - "rating"
+    - "num_rating"
+
+# Data type specifications (for reference)
+data_types:
+  product_brand: "VARCHAR(100)"
+  product_id: "VARCHAR(20)"
+  product_title: "TEXT"
+  price: "DECIMAL(10,2)"
+  rating: "DECIMAL(3,1)"
+  num_rating: "INTEGER"

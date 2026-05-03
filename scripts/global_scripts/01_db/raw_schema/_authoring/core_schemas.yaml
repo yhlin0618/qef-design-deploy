@@ -1,0 +1,1655 @@
+# ==============================================================================
+# core_schemas.yaml  -  Canonical Schema (MP157 Layer 1)
+# ==============================================================================
+# Bound by:
+#   - MP102 v1.2  (ETL Output Standardization, MP156 Tier-2 Schema Contract)
+#   - MP156       (Two-Tier Normativity, Category A - Schema Contract binding)
+#   - MP157       (Two-Layer YAML Authoring, Layer 1 = universal contract)
+#   - MP158       (Glue-Driven Raw Layer Extensibility, axes 1+2 Step 1 target)
+#   - MP159       (Glue Authoring Boundary Immutability - immutable during bridge authoring)
+#   - SO_R038     (Schema Authoring YAML Naming Convention)
+#   - DM_R065     (Schema Dedup Discipline)
+#
+# Most recent significant edit: spectra change qef-product-master-redesign
+#   Phase 9 task 9.0e (sentinel unification + alias dedup + binding header, 2026-04-28).
+#
+# Change discipline:
+#   - Edits trigger IC_P002 cross-company verification (QEF/D_RACING/MAMBA/WISER/kitchenMAMA).
+#   - Commit message must contain Verified: schema change against 5 consuming companies trailer.
+#   - Edits during a /glue-bridge skill flow are forbidden (MP159) - abort and propose
+#     a separate Layer 1 change spec instead.
+#   - Adding a new datatype-level or field-level key requires updating _meta_schema.yaml
+#     in the same commit (SO_R038 rule 6).
+# ==============================================================================
+
+# Core ETL Output Schemas
+# Following MP102 (v1.2): ETL Output Standardization Principle
+# Bound by MP102 per MP156 Two-Tier Normativity (Category A — Schema Contract)
+#
+# This file defines the standardized core schema fields that must be present
+# in all platform ETL outputs for each data type, including bridge-mapping
+# hints (aliases / pattern / fallback / coercion) used by `fn_glue_bridge`
+# (05_etl_utils/glue/) to map per-company prerawdata sources (GSheet / xlsx
+# / CSV / API) to canonical raw layer tables.
+#
+# Version: 2.0 (Phase 2 enrichment — bridge-mapping hints added)
+# Last Updated: 2026-04-27
+# Authors:
+#   - Claude (MAMBA Architecture, original 1.0)
+#   - Claude (spectra change `glue-layer-prerawdata-bridge`, #489, v2.0)
+#
+# Field-level keys reference:
+#   type            — DuckDB-mapped column type (see type_mapping section)
+#   required        — true | false (NOT NULL constraint when true)
+#   description     — Authoritative English description
+#   description_zh  — 繁體中文描述 (UI_R025 用語規範)
+#   aliases         — Common synonyms in prerawdata sheets (case-insensitive)
+#   pattern         — Regex constraint (PCRE-compatible; DuckDB CHECK)
+#   fallback        — How to handle missing/empty values
+#                       rule:      "use_value" | "sentinel" | "derive_from"
+#                       value:     literal sentinel (MP154: never silent NA)
+#                       rationale: why this fallback was chosen
+#   coercion        — How to normalize incoming values
+#                       from:      list of acceptable input R/SQL types
+#                       to:        canonical output type
+#                       rule:      transformation steps
+#   constraints     — DDL constraint expressions (DuckDB CHECK syntax)
+
+# =============================================================================
+# SALES DATA TYPE
+# =============================================================================
+sales:
+  description: "Standardized sales transaction data across all platforms"
+  description_zh: "跨平台標準化的銷售交易資料"
+  table_pattern: "df_{platform}_sales___raw"
+  version: "2.0"
+
+  required_fields:
+    # ------------------------------------------------------------------------
+    # Transaction Identifiers
+    # ------------------------------------------------------------------------
+    order_id:
+      type: VARCHAR
+      required: true
+      description: "Unique order identifier from platform"
+      description_zh: "平台原生的唯一訂單識別碼"
+      aliases:
+        - "order id"
+        - "order_no"
+        - "order_number"
+
+
+        - "訂單編號"
+        - "訂單號碼"
+
+        - "amazon-order-id"
+      coercion:
+        from: ["character", "factor", "integer"]
+        to: "character"
+        rule: "as.character + trimws"
+      fallback:
+        rule: "sentinel"
+        value: "UNKNOWN_ORDER"
+        rationale: "MP154: never silent NA; downstream DRV needs a stable join key even for malformed rows so the row can be quarantined and reported"
+      constraints:
+        - "NOT NULL"
+        - "LENGTH > 0"
+
+    customer_id:
+      type: VARCHAR
+      required: true
+      description: "Customer identifier (can be email, username, or platform-specific ID)"
+      description_zh: "顧客識別碼(可為 email、使用者名稱或平台專屬 ID)"
+      aliases:
+        - "customer id"
+        - "buyer_id"
+        - "buyer-id"
+        - "user_id"
+        - "client_id"
+        - "顧客編號"
+        - "客戶編號"
+        - "買家編號"
+        - "Buyer Email"
+      coercion:
+        from: ["character", "factor"]
+        to: "character"
+        rule: "as.character + trimws + tolower (when matches email pattern)"
+      fallback:
+        rule: "sentinel"
+        value: "UNKNOWN_CUSTOMER"
+        rationale: "MP154; preserves row count; flagged for downstream identity resolution"
+      constraints:
+        - "NOT NULL"
+        - "LENGTH > 0"
+
+    product_id:
+      type: VARCHAR
+      required: true
+      description: "Product identifier (SKU, ASIN, or platform-specific ID)"
+      description_zh: "產品識別碼(SKU、ASIN 或平台專屬 ID)"
+      aliases:
+        - "product id"
+        - "asin"
+
+        - "Amazon Standard Identification Number"
+        - "sku"
+
+        - "Stock Keeping Unit"
+        - "item_id"
+        - "item-id"
+
+        - "產品編號"
+        - "商品編號"
+        - "貨號"
+      pattern: "^[A-Za-z0-9._-]+$"
+      coercion:
+        from: ["character", "factor"]
+        to: "character"
+        rule: "as.character + trimws + toupper (when matches ASIN pattern ^B0[A-Z0-9]{8}$)"
+      fallback:
+        rule: "derive_from"
+        derive: "if sku present and matches ASIN-shape pattern, use sku as product_id; else sentinel"
+        value: "UNKNOWN_PRODUCT"
+        rationale: "MP154 + DM_R064: avoid positional-index inference; only derive when shape pattern matches"
+      constraints:
+        - "NOT NULL"
+        - "LENGTH > 0"
+
+    # ------------------------------------------------------------------------
+    # Transaction Data
+    # ------------------------------------------------------------------------
+    order_date:
+      type: VARCHAR
+      required: true
+      description: "Order date as string (to be parsed in staging 1ST)"
+      description_zh: "訂單日期(字串,於 staging 1ST 階段解析)"
+      aliases:
+        - "order date"
+        - "purchase_date"
+        - "purchase-date"
+
+        - "transaction_date"
+        - "訂購日期"
+        - "下單日期"
+        - "成立日期"
+      coercion:
+        from: ["character", "factor", "Date", "POSIXct"]
+        to: "character"
+        rule: "format(., '%Y-%m-%d') for Date/POSIXct; trimws otherwise"
+      fallback:
+        rule: "sentinel"
+        value: "1970-01-01"
+        rationale: "MP154; epoch sentinel allows downstream parsing to flag without breaking date-typed columns; quarantine on this value in 1ST"
+      constraints:
+        - "NOT NULL"
+        - "LENGTH > 0"
+
+    quantity:
+      type: INTEGER
+      required: true
+      description: "Quantity of items sold"
+      description_zh: "銷售數量"
+      aliases:
+        - "qty"
+
+        - "Quantity"
+        - "Quantity Ordered"
+        - "quantity_ordered"
+        - "件數"
+        - "數量"
+      coercion:
+        from: ["integer", "numeric", "character"]
+        to: "integer"
+        rule: "as.integer; reject if NaN or negative"
+      fallback:
+        rule: "use_value"
+        value: 1
+        rationale: "Single-unit assumption for malformed rows; flagged in import_source = 'fallback_quantity_default'"
+      constraints:
+        - "NOT NULL"
+        - ">= 1"
+
+    unit_price:
+      type: NUMERIC
+      required: true
+      description: "Price per unit (gross of tax/shipping)"
+      description_zh: "單價(含稅前/運費前)"
+      aliases:
+        - "unit price"
+        - "price"
+        - "item_price"
+        - "Item Price"
+        - "list_price"
+        - "單價"
+        - "售價"
+      coercion:
+        from: ["numeric", "double", "integer", "character"]
+        to: "double"
+        rule: "as.numeric after stripping currency symbols + thousand separators"
+      fallback:
+        rule: "derive_from"
+        derive: "if total_amount + quantity present, unit_price = total_amount / quantity; else sentinel 0"
+        value: 0
+        rationale: "MP154: 0 is a sentinel that downstream filters can flag; never silent NA"
+      constraints:
+        - "NOT NULL"
+        - ">= 0"
+
+    total_amount:
+      type: NUMERIC
+      required: true
+      description: "Total transaction amount (line-item subtotal)"
+      description_zh: "交易總金額(品項小計)"
+      aliases:
+        - "total amount"
+        - "total"
+        - "subtotal"
+        - "line_total"
+        - "amount"
+        - "成交金額"
+        - "總金額"
+        - "小計"
+      coercion:
+        from: ["numeric", "double", "integer", "character"]
+        to: "double"
+        rule: "as.numeric after stripping currency symbols + thousand separators"
+      fallback:
+        rule: "derive_from"
+        derive: "unit_price * quantity when both present; else sentinel 0"
+        value: 0
+        rationale: "MP154; derived consistency check during validation"
+      constraints:
+        - "NOT NULL"
+        - ">= 0"
+
+    # ------------------------------------------------------------------------
+    # ETL Metadata
+    # ------------------------------------------------------------------------
+    platform_id:
+      type: VARCHAR
+      required: true
+      description: "Three-letter platform_id (cbz, eby, amz, shp, official_website prefix)"
+      description_zh: "三字母平台識別碼"
+      aliases:
+        - "platform"
+        - "platform_code"
+        - "channel"
+        - "sales_channel"
+        - "marketplace"
+        - "平台"
+      pattern: "^[a-z]{3}$|^official_website$"
+      coercion:
+        from: ["character", "factor"]
+        to: "character"
+        rule: "tolower + trimws"
+      fallback:
+        rule: "derive_from"
+        derive: "from bridge yaml `canonical_target.platform` field (always known at codegen time)"
+        rationale: "Bridge yaml binds source → platform_id; runtime never sees missing platform_id"
+      constraints:
+        - "NOT NULL"
+        - "LENGTH = 3 OR platform_id = 'official_website'"
+        - "LOWER(platform_id) = platform_id"
+
+    import_timestamp:
+      type: TIMESTAMP
+      required: true
+      description: "When data was imported to raw_data layer"
+      description_zh: "資料匯入 raw_data 層的時間戳"
+      aliases:
+        - "imported_at"
+        - "ingest_timestamp"
+        - "etl_timestamp"
+        - "匯入時間"
+      coercion:
+        from: ["POSIXct", "POSIXlt", "character"]
+        to: "TIMESTAMP"
+        rule: "as.POSIXct(., tz = 'UTC')"
+      fallback:
+        rule: "derive_from"
+        derive: "Sys.time() at INSERT time (always available in R runtime)"
+        rationale: "Never user-supplied; always derived from runtime"
+      constraints:
+        - "NOT NULL"
+
+    import_source:
+      type: VARCHAR
+      required: true
+      description: "Source of import (API, CSV, GSheet, glue_bridge, etc.)"
+      description_zh: "匯入來源(API、CSV、GSheet、glue_bridge 等)"
+      aliases:
+        - "source"
+        - "data_source"
+        - "ingestion_source"
+        - "匯入來源"
+      coercion:
+        from: ["character", "factor"]
+        to: "character"
+        rule: "tolower + trimws"
+      fallback:
+        rule: "sentinel"
+        value: "UNKNOWN_SOURCE"
+        rationale: "MP154; always log even when source unclear"
+      constraints:
+        - "NOT NULL"
+        - "LENGTH > 0"
+
+# =============================================================================
+# CUSTOMERS DATA TYPE
+# =============================================================================
+customers:
+  description: "Standardized customer profile data across all platforms"
+  description_zh: "跨平台標準化的顧客檔案資料"
+  table_pattern: "df_{platform}_customers___raw"
+  version: "2.0"
+
+  required_fields:
+    # ------------------------------------------------------------------------
+    # Customer Identifiers
+    # ------------------------------------------------------------------------
+    customer_id:
+      type: VARCHAR
+      required: true
+      description: "Primary customer identifier (platform-native)"
+      description_zh: "主要顧客識別碼(平台原生)"
+      aliases:
+        - "customer id"
+        - "buyer_id"
+        - "user_id"
+        - "client_id"
+        - "顧客編號"
+        - "客戶編號"
+      coercion:
+        from: ["character", "factor"]
+        to: "character"
+        rule: "as.character + trimws"
+      fallback:
+        rule: "derive_from"
+        derive: "if customer_email present and non-empty, use email; else sentinel"
+        value: "UNKNOWN_CUSTOMER"
+        rationale: "MP154; email is a stable identifier across many platforms"
+      constraints:
+        - "NOT NULL"
+        - "LENGTH > 0"
+
+    customer_email:
+      type: VARCHAR
+      required: false
+      description: "Customer email address"
+      description_zh: "顧客電子郵件"
+      aliases:
+        - "email"
+
+        - "e_mail"
+        - "buyer_email"
+        - "Buyer Email"
+        - "電子郵件"
+        - "信箱"
+      pattern: "^[^@]+@[^@]+\\.[^@]+$"
+      coercion:
+        from: ["character", "factor"]
+        to: "character"
+        rule: "tolower + trimws (RFC 5321 local-part case-sensitive technically, but normalized for matching)"
+      fallback:
+        rule: "sentinel"
+        value: ""
+        rationale: "MP154; empty string is the sentinel for not-provided email; downstream filters via LENGTH check"
+      constraints:
+        - "LENGTH >= 0"
+
+    customer_name:
+      type: VARCHAR
+      required: false
+      description: "Customer display name or full name"
+      description_zh: "顧客顯示名稱或全名"
+      aliases:
+        - "name"
+
+        - "buyer_name"
+        - "Buyer Name"
+        - "full_name"
+        - "display_name"
+        - "顧客姓名"
+        - "買家姓名"
+      coercion:
+        from: ["character", "factor"]
+        to: "character"
+        rule: "trimws (preserve case for human-readable display)"
+      fallback:
+        rule: "sentinel"
+        value: ""
+        rationale: "MP154; empty string sentinel"
+      constraints:
+        - "LENGTH >= 0"
+
+    # ------------------------------------------------------------------------
+    # Customer Data
+    # ------------------------------------------------------------------------
+    registration_date:
+      type: VARCHAR
+      required: false
+      description: "Customer registration date as string"
+      description_zh: "顧客註冊日期(字串)"
+      aliases:
+        - "signup_date"
+        - "joined_at"
+        - "creation_date"
+        - "register_date"
+        - "註冊日期"
+        - "加入日期"
+      coercion:
+        from: ["character", "Date", "POSIXct"]
+        to: "character"
+        rule: "format(., '%Y-%m-%d')"
+      fallback:
+        rule: "sentinel"
+        value: ""
+        rationale: "MP154; empty string sentinel for missing registration date"
+      constraints:
+        - "LENGTH >= 0"
+
+    # ------------------------------------------------------------------------
+    # ETL Metadata (shared with sales)
+    # ------------------------------------------------------------------------
+    platform_id:
+      type: VARCHAR
+      required: true
+      description: "Three-letter platform_id"
+      description_zh: "三字母平台識別碼"
+      aliases:
+        - "platform"
+        - "channel"
+      pattern: "^[a-z]{3}$|^official_website$"
+      coercion:
+        from: ["character", "factor"]
+        to: "character"
+        rule: "tolower + trimws"
+      fallback:
+        rule: "derive_from"
+        derive: "from bridge yaml canonical_target.platform"
+      constraints:
+        - "NOT NULL"
+        - "LENGTH = 3 OR platform_id = 'official_website'"
+        - "LOWER(platform_id) = platform_id"
+
+    import_timestamp:
+      type: TIMESTAMP
+      required: true
+      description: "When data was imported to raw_data"
+      description_zh: "資料匯入 raw_data 的時間戳"
+      coercion:
+        from: ["POSIXct", "character"]
+        to: "TIMESTAMP"
+        rule: "as.POSIXct(., tz = 'UTC')"
+      fallback:
+        rule: "derive_from"
+        derive: "Sys.time()"
+      constraints:
+        - "NOT NULL"
+
+    import_source:
+      type: VARCHAR
+      required: true
+      description: "Source of import"
+      description_zh: "匯入來源"
+      coercion:
+        from: ["character"]
+        to: "character"
+        rule: "tolower + trimws"
+      fallback:
+        rule: "sentinel"
+        value: "UNKNOWN_SOURCE"
+      constraints:
+        - "NOT NULL"
+        - "LENGTH > 0"
+
+# =============================================================================
+# ORDERS DATA TYPE
+# =============================================================================
+orders:
+  description: "Standardized order header data across all platforms"
+  description_zh: "跨平台標準化的訂單表頭資料"
+  table_pattern: "df_{platform}_orders___raw"
+  version: "2.0"
+
+  required_fields:
+    # ------------------------------------------------------------------------
+    # Order Identifiers
+    # ------------------------------------------------------------------------
+    order_id:
+      type: VARCHAR
+      required: true
+      description: "Unique order identifier"
+      description_zh: "唯一訂單識別碼"
+      aliases:
+        - "order id"
+        - "order_no"
+
+        - "Amazon Order ID"
+        - "訂單編號"
+      coercion:
+        from: ["character", "factor", "integer"]
+        to: "character"
+        rule: "as.character + trimws"
+      fallback:
+        rule: "sentinel"
+        value: "UNKNOWN_ORDER"
+        rationale: "MP154; matches sales.order_id sentinel"
+      constraints:
+        - "NOT NULL"
+        - "LENGTH > 0"
+
+    customer_id:
+      type: VARCHAR
+      required: true
+      description: "Customer who placed the order"
+      description_zh: "下訂單的顧客"
+      aliases:
+        - "customer id"
+        - "buyer_id"
+        - "顧客編號"
+      coercion:
+        from: ["character", "factor"]
+        to: "character"
+        rule: "as.character + trimws"
+      fallback:
+        rule: "sentinel"
+        value: "UNKNOWN_CUSTOMER"
+      constraints:
+        - "NOT NULL"
+        - "LENGTH > 0"
+
+    # ------------------------------------------------------------------------
+    # Order Data
+    # ------------------------------------------------------------------------
+    order_date:
+      type: VARCHAR
+      required: true
+      description: "Order date as string"
+      description_zh: "訂單日期(字串)"
+      aliases:
+        - "order date"
+        - "Purchase Date"
+        - "成立日期"
+      coercion:
+        from: ["character", "Date", "POSIXct"]
+        to: "character"
+        rule: "format(., '%Y-%m-%d')"
+      fallback:
+        rule: "sentinel"
+        value: "1970-01-01"
+      constraints:
+        - "NOT NULL"
+        - "LENGTH > 0"
+
+    order_status:
+      type: VARCHAR
+      required: true
+      description: "Current status of the order (Pending / Shipped / Delivered / Cancelled / Refunded)"
+      description_zh: "訂單目前狀態(待處理/已出貨/已送達/已取消/已退款)"
+      aliases:
+        - "status"
+
+        - "Order Status"
+        - "fulfillment_status"
+        - "訂單狀態"
+        - "狀態"
+      coercion:
+        from: ["character", "factor"]
+        to: "character"
+        rule: "trimws (preserve case for status terms)"
+      fallback:
+        rule: "sentinel"
+        value: "UNKNOWN_STATUS"
+        rationale: "MP154; downstream filters explicitly check for known status values"
+      constraints:
+        - "NOT NULL"
+        - "LENGTH > 0"
+
+    total_amount:
+      type: NUMERIC
+      required: true
+      description: "Total order amount (sum of line items + shipping + tax - discounts)"
+      description_zh: "訂單總金額(品項小計加運費加稅費減折扣)"
+      aliases:
+        - "total amount"
+        - "order_total"
+        - "grand_total"
+        - "Total"
+        - "訂單金額"
+        - "總金額"
+      coercion:
+        from: ["numeric", "character"]
+        to: "double"
+        rule: "as.numeric after stripping currency symbols"
+      fallback:
+        rule: "use_value"
+        value: 0
+        rationale: "MP154; 0 sentinel; flagged when import_source mentions 'fallback'"
+      constraints:
+        - "NOT NULL"
+        - ">= 0"
+
+    shipping_amount:
+      type: NUMERIC
+      required: false
+      description: "Shipping cost"
+      description_zh: "運費"
+      aliases:
+        - "shipping"
+        - "shipping_cost"
+
+        - "運費"
+      coercion:
+        from: ["numeric", "character"]
+        to: "double"
+        rule: "as.numeric"
+      fallback:
+        rule: "use_value"
+        value: 0
+        rationale: "0 = no shipping fee (free shipping or pickup)"
+      constraints:
+        - ">= 0"
+
+    tax_amount:
+      type: NUMERIC
+      required: false
+      description: "Tax amount"
+      description_zh: "稅費"
+      aliases:
+        - "tax"
+
+        - "vat"
+        - "sales_tax"
+        - "稅費"
+      coercion:
+        from: ["numeric", "character"]
+        to: "double"
+        rule: "as.numeric"
+      fallback:
+        rule: "use_value"
+        value: 0
+        rationale: "0 = no tax (tax-inclusive pricing or tax-exempt)"
+      constraints:
+        - ">= 0"
+
+    payment_method:
+      type: VARCHAR
+      required: false
+      description: "Payment method used"
+      description_zh: "使用的付款方式"
+      aliases:
+        - "payment"
+        - "Payment Method"
+        - "payment_type"
+        - "付款方式"
+      coercion:
+        from: ["character", "factor"]
+        to: "character"
+        rule: "trimws"
+      fallback:
+        rule: "sentinel"
+        value: ""
+        rationale: "MP154; empty string sentinel"
+      constraints:
+        - "LENGTH >= 0"
+
+    # ------------------------------------------------------------------------
+    # ETL Metadata (shared)
+    # ------------------------------------------------------------------------
+    platform_id:
+      type: VARCHAR
+      required: true
+      description: "Three-letter platform_id"
+      description_zh: "三字母平台識別碼"
+      pattern: "^[a-z]{3}$|^official_website$"
+      coercion:
+        from: ["character"]
+        to: "character"
+        rule: "tolower + trimws"
+      fallback:
+        rule: "derive_from"
+        derive: "from bridge yaml canonical_target.platform"
+      constraints:
+        - "NOT NULL"
+        - "LENGTH = 3 OR platform_id = 'official_website'"
+        - "LOWER(platform_id) = platform_id"
+
+    import_timestamp:
+      type: TIMESTAMP
+      required: true
+      description: "When data was imported to raw_data"
+      description_zh: "資料匯入 raw_data 的時間戳"
+      coercion:
+        from: ["POSIXct", "character"]
+        to: "TIMESTAMP"
+        rule: "as.POSIXct(., tz = 'UTC')"
+      fallback:
+        rule: "derive_from"
+        derive: "Sys.time()"
+      constraints:
+        - "NOT NULL"
+
+    import_source:
+      type: VARCHAR
+      required: true
+      description: "Source of import"
+      description_zh: "匯入來源"
+      coercion:
+        from: ["character"]
+        to: "character"
+        rule: "tolower + trimws"
+      fallback:
+        rule: "sentinel"
+        value: "UNKNOWN_SOURCE"
+      constraints:
+        - "NOT NULL"
+        - "LENGTH > 0"
+
+# =============================================================================
+# PRODUCTS DATA TYPE
+# =============================================================================
+products:
+  # ==========================================================================
+  # THIN MASTER (D11 three-table partition for products datatype, v3.0)
+  # --------------------------------------------------------------------------
+  # Per spectra change qef-product-master-redesign D11 (2026-04-28):
+  # `products` is the THIN MASTER over the per-product-line attribute tables
+  # (one `product_attributes_{pl_id}` datatype per product line) plus the
+  # SKU-keyed `company_product_extension` datatype. The physical realisation
+  # of `products` in DDL is a VIEW that UNIONs the common columns of the
+  # attribute tables — bridges target the per-PL attribute tables, not the
+  # master view directly. See design.md D11 for the full architecture.
+  #
+  # Cols in this thin master are the SUBSET that is universal across every
+  # product line and survives MP157 anti-pattern A-3 ("no per-company
+  # defaults at Layer 1") and the parallel "no per-PL columns at Layer 1"
+  # principle.
+  #
+  # FIELDS REMOVED from v2.0 (and where they went under D11):
+  #   - category / subcategory  -> per-PL attribute tables (each PL has its
+  #                                 own taxonomy — universal cols would just
+  #                                 collapse to a single sentinel everywhere)
+  #   - price / description     -> SKU extension datatype (price varies by
+  #                                 marketplace and is financial data; long
+  #                                 description is per-PL marketing copy)
+  # FIELDS ADDED in v3.0:
+  #   - marketplace             -> required, supports multi-marketplace
+  #                                 expansion (currently QEF is amz US only;
+  #                                 D_RACING / WISER will need this)
+  #   - product_line_id         -> required FK to per-PL attribute tables
+  #   - is_own_product          -> derived in bridge from gsheet
+  #                                 "標竿產品" (own / benchmark) vs
+  #                                 "競爭對手" (competitor) classification
+  # FIELDS PROMOTED in v3.0:
+  #   - sku   was optional (v2.0) -> required (v3.0) because it is the FK
+  #           into company_product_extension and identity for variant rollups
+  #
+  # Bound by MP102 v1.2 + MP156 + MP157 + MP158 (this datatype is the
+  # canonical reference example for D11 partition + 3-step extensibility).
+  # ==========================================================================
+  description: "Thin master for product catalog data; physical impl is a VIEW over per-PL product_attributes_{pl_id} tables (D11)"
+  description_zh: "產品目錄薄主表;實體實作是 per-PL product_attributes_{pl_id} 表的 VIEW(D11 三表分區)"
+  table_pattern: "df_{platform}_products___raw"
+  version: "3.0"
+  physical_realization: "view"  # consumed by _build.R to emit CREATE VIEW (vs CREATE TABLE)
+  view_source_pattern: "df_{platform}_product_attributes_*___raw"  # UNION all peer attr tables on common cols
+
+  required_fields:
+    # ------------------------------------------------------------------------
+    # Product Identifiers (universal-contract)
+    # ------------------------------------------------------------------------
+    product_id:
+      type: VARCHAR
+      required: true
+      description: "Canonical product identifier (resolves to ASIN at amz; SKU at platforms without separate ASIN)"
+      description_zh: "標準產品識別碼(amz 平台對應 ASIN;無 ASIN 平台對應 SKU)"
+      aliases:
+        - "product id"
+        - "asin"
+
+
+
+        - "item_id"
+
+        - "產品編號"
+        - "貨號"
+      pattern: "^[A-Za-z0-9._-]+$"
+      coercion:
+        from: ["character", "factor"]
+        to: "character"
+        rule: "as.character + trimws + toupper (when matches ASIN pattern)"
+      fallback:
+        rule: "derive_from"
+        derive: "if sku present and matches ASIN-shape, use sku; else sentinel"
+        value: "UNKNOWN_PRODUCT"
+        rationale: "MP154 + DM_R064"
+      constraints:
+        - "NOT NULL"
+        - "LENGTH > 0"
+
+    sku:
+      type: VARCHAR
+      required: true                               # promoted from optional in v2.0 -> required in v3.0
+      description: "Stock keeping unit; FK into company_product_extension for financial data (D11)"
+      description_zh: "庫存單位;與 company_product_extension(財務資料)的 JOIN 鍵(D11)"
+      aliases:
+        - "SKU"
+        - "Stock Keeping Unit"
+        - "merchant_sku"
+        - "seller-sku"
+
+        - "Variant SKU"
+        - "庫存編號"
+      coercion:
+        from: ["character", "factor"]
+        to: "character"
+        rule: "trimws"
+      fallback:
+        rule: "derive_from"
+        derive: "if absent in source, fall back to product_id (1:1 SKU=ASIN at amz when seller has not minted a separate SKU)"
+        rationale: "MP154; ensures FK validity into extension table even when source omits SKU"
+      constraints:
+        - "NOT NULL"
+        - "LENGTH > 0"
+
+    marketplace:
+      type: VARCHAR
+      required: true
+      description: "Marketplace identifier within a platform (e.g., amz_us, amz_jp, eby_uk); compound PK with sku for cross-marketplace variant separation"
+      description_zh: "平台內的市場識別碼(例:amz_us、amz_jp、eby_uk);與 sku 組成複合主鍵以區分跨市場 variants"
+      aliases:
+        - "marketplace"
+        - "marketplace_id"
+        - "country_code"
+        - "region"
+      pattern: "^[a-z]{3}_[a-z]{2,3}$|^[a-z]{3}$"
+      coercion:
+        from: ["character", "factor"]
+        to: "character"
+        rule: "tolower + trimws"
+      fallback:
+        rule: "derive_from"
+        derive: "from bridge yaml canonical_target.platform when source is single-marketplace (per-co constant via use_value:)"
+        rationale: "Bridge yaml supplies via use_value when company is single-marketplace (MP157 Layer 2 per-co constant)"
+      constraints:
+        - "NOT NULL"
+        - "LENGTH > 0"
+
+    product_line_id:
+      type: VARCHAR
+      required: true
+      description: "Canonical product-line identifier; FK to product_line_master + identifies which product_attributes_{pl_id} table this row belongs to (D11)"
+      description_zh: "標準產品線識別碼;指向 product_line_master 並決定該列屬於哪張 product_attributes_{pl_id} 屬性表(D11)"
+      aliases:
+        - "product_line"
+        - "product_line_id"
+        - "PL"
+        - "pl_id"
+        - "category_id"
+        - "產品線"
+      coercion:
+        from: ["character", "factor"]
+        to: "character"
+        rule: "tolower + trimws + gsub(' ', '_')"
+      fallback:
+        rule: "use_value"
+        value: "UNKNOWN_PRODUCT_LINE"
+        rationale: "MP154 sentinel; downstream MP155 sales-derived inference (Track C, deferred to #491) may upgrade UNKNOWN to a real pl_id"
+      constraints:
+        - "NOT NULL"
+        - "LENGTH > 0"
+
+    product_name:
+      type: VARCHAR
+      required: true
+      description: "Product name or title"
+      description_zh: "產品名稱或標題"
+      aliases:
+        - "name"
+        - "title"
+        - "Product Name"
+        - "Product Title"
+        - "Item Name"
+        - "產品名稱"
+        - "商品名稱"
+      coercion:
+        from: ["character", "factor"]
+        to: "character"
+        rule: "trimws (preserve case + locale for human display)"
+      fallback:
+        rule: "sentinel"
+        value: "UNKNOWN_PRODUCT"
+        rationale: "MP154; matches product_id sentinel"
+      constraints:
+        - "NOT NULL"
+        - "LENGTH > 0"
+
+    brand:
+      type: VARCHAR
+      required: true                               # promoted from optional in v2.0 -> required in v3.0 (BrandEdge analytics dependency)
+      description: "Product brand; consumed by BrandEdge analytics so a stable sentinel is required for filterability"
+      description_zh: "產品品牌;BrandEdge 分析的關鍵欄位,需有 sentinel 確保可過濾"
+      aliases:
+        - "Brand"
+        - "brand_name"
+
+        - "manufacturer"
+        - "品牌"
+      coercion:
+        from: ["character", "factor"]
+        to: "character"
+        rule: "trimws"
+      fallback:
+        rule: "sentinel"
+        value: "UNKNOWN_BRAND"
+        rationale: "MP154; brand drives downstream BrandEdge analytics so sentinel is required for filterability"
+      constraints:
+        - "NOT NULL"
+        - "LENGTH > 0"
+
+    is_own_product:
+      type: BOOLEAN
+      required: true
+      description: "TRUE = own product (e.g., 標竿產品); FALSE = competitor reference (e.g., 競爭對手); separates marketing analytics target set"
+      description_zh: "TRUE = 本公司產品(標竿產品);FALSE = 競爭對手產品;切分行銷分析的目標集合"
+      aliases:
+        - "is_own"
+        - "own_product"
+        - "標竿產品"
+        - "競爭對手"
+        - "ownership"
+        - "owner_type"
+      coercion:
+        from: ["logical", "character", "integer"]
+        to: "logical"
+        rule: "as.logical via mapping: '標竿產品','own','self','true','1' -> TRUE; '競爭對手','competitor','other','false','0' -> FALSE"
+      fallback:
+        rule: "use_value"
+        value: false
+        rationale: "Conservative default: an unclassified product is NOT counted as own — prevents accidental inflation of own-brand metrics. Bridge MUST translate the gsheet ownership column explicitly (MP154) to override this default"
+
+    is_active:
+      type: BOOLEAN
+      required: false
+      description: "Whether product is currently active/available for sale"
+      description_zh: "產品目前是否在售"
+      aliases:
+        - "active"
+        - "available"
+        - "is_available"
+        - "in_stock"
+        - "status"
+        - "上架中"
+      coercion:
+        from: ["logical", "character", "integer"]
+        to: "logical"
+        rule: "as.logical via tolower mapping: 'true','yes','1','active' -> TRUE; 'false','no','0','inactive' -> FALSE"
+      fallback:
+        rule: "use_value"
+        value: true
+        rationale: "Default to active when unknown; conservative for revenue-relevant analytics"
+
+    # ------------------------------------------------------------------------
+    # ETL Metadata (shared across all datatypes)
+    # ------------------------------------------------------------------------
+    platform_id:
+      type: VARCHAR
+      required: true
+      description: "Three-letter platform_id"
+      description_zh: "三字母平台識別碼"
+      pattern: "^[a-z]{3}$|^official_website$"
+      coercion:
+        from: ["character"]
+        to: "character"
+        rule: "tolower + trimws"
+      fallback:
+        rule: "derive_from"
+        derive: "from bridge yaml canonical_target.platform"
+      constraints:
+        - "NOT NULL"
+        - "LENGTH = 3 OR platform_id = 'official_website'"
+        - "LOWER(platform_id) = platform_id"
+
+    import_timestamp:
+      type: TIMESTAMP
+      required: true
+      description: "When data was imported to raw_data"
+      description_zh: "資料匯入 raw_data 的時間戳"
+      coercion:
+        from: ["POSIXct", "character"]
+        to: "TIMESTAMP"
+        rule: "as.POSIXct(., tz = 'UTC')"
+      fallback:
+        rule: "derive_from"
+        derive: "Sys.time()"
+      constraints:
+        - "NOT NULL"
+
+    import_source:
+      type: VARCHAR
+      required: true
+      description: "Source of import"
+      description_zh: "匯入來源"
+      coercion:
+        from: ["character"]
+        to: "character"
+        rule: "tolower + trimws"
+      fallback:
+        rule: "sentinel"
+        value: "UNKNOWN_SOURCE"
+      constraints:
+        - "NOT NULL"
+        - "LENGTH > 0"
+
+# =============================================================================
+# REVIEWS DATA TYPE
+# =============================================================================
+reviews:
+  description: "Standardized product review data across all platforms"
+  description_zh: "跨平台標準化的產品評論資料"
+  table_pattern: "df_{platform}_reviews___raw"
+  version: "2.0"
+
+  required_fields:
+    # ------------------------------------------------------------------------
+    # Review Identifiers
+    # ------------------------------------------------------------------------
+    review_id:
+      type: VARCHAR
+      required: true
+      description: "Unique review identifier"
+      description_zh: "唯一評論識別碼"
+      aliases:
+        - "review id"
+
+        - "review_uid"
+        - "comment_id"
+        - "feedback_id"
+        - "評論編號"
+      coercion:
+        from: ["character", "factor", "integer"]
+        to: "character"
+        rule: "as.character + trimws"
+      fallback:
+        rule: "derive_from"
+        derive: "sha256(product_id + customer_id + review_date) when missing; else sentinel"
+        value: "UNKNOWN_REVIEW"
+        rationale: "MP154; deterministic hash gives uniqueness when prerawdata lacks explicit ID"
+      constraints:
+        - "NOT NULL"
+        - "LENGTH > 0"
+
+    product_id:
+      type: VARCHAR
+      required: true
+      description: "Product being reviewed"
+      description_zh: "被評論的產品"
+      aliases:
+        - "product id"
+        - "asin"
+
+        - "sku"
+        - "產品編號"
+      pattern: "^[A-Za-z0-9._-]+$"
+      coercion:
+        from: ["character", "factor"]
+        to: "character"
+        rule: "as.character + trimws + toupper (ASIN-shaped)"
+      fallback:
+        rule: "sentinel"
+        value: "UNKNOWN_PRODUCT"
+        rationale: "MP154; reviews without product_id are quarantined"
+      constraints:
+        - "NOT NULL"
+        - "LENGTH > 0"
+
+    customer_id:
+      type: VARCHAR
+      required: true
+      description: "Customer who wrote the review"
+      description_zh: "撰寫評論的顧客"
+      aliases:
+        - "reviewer_id"
+        - "Reviewer ID"
+        - "buyer_id"
+        - "顧客編號"
+      coercion:
+        from: ["character", "factor"]
+        to: "character"
+        rule: "as.character + trimws"
+      fallback:
+        rule: "sentinel"
+        value: "UNKNOWN_CUSTOMER"
+      constraints:
+        - "NOT NULL"
+        - "LENGTH > 0"
+
+    # ------------------------------------------------------------------------
+    # Review Data
+    # ------------------------------------------------------------------------
+    rating:
+      type: NUMERIC
+      required: true
+      description: "Numeric rating score (typically 1-5)"
+      description_zh: "數值評分(通常 1 到 5)"
+      aliases:
+        - "Rating"
+        - "stars"
+
+        - "score"
+        - "review_rating"
+        - "評分"
+        - "星數"
+      coercion:
+        from: ["numeric", "integer", "character"]
+        to: "double"
+        rule: "as.numeric; cap to [0, 5] range"
+      fallback:
+        rule: "use_value"
+        value: 0
+        rationale: "MP154; 0 sentinel + downstream filters distinguish from valid 1-5 range"
+      constraints:
+        - "NOT NULL"
+        - ">= 0"
+        - "<= 5"
+
+    review_date:
+      type: VARCHAR
+      required: true
+      description: "Review date as string"
+      description_zh: "評論日期(字串)"
+      aliases:
+        - "review date"
+        - "Date"
+        - "posted_at"
+        - "submission_date"
+        - "評論日期"
+      coercion:
+        from: ["character", "Date", "POSIXct"]
+        to: "character"
+        rule: "format(., '%Y-%m-%d')"
+      fallback:
+        rule: "sentinel"
+        value: "1970-01-01"
+      constraints:
+        - "NOT NULL"
+        - "LENGTH > 0"
+
+    review_text:
+      type: TEXT
+      required: false
+      description: "Review text content"
+      description_zh: "評論內容"
+      aliases:
+        - "review_body"
+        - "comment"
+        - "Review Text"
+        - "Body"
+        - "content"
+        - "評論內容"
+      coercion:
+        from: ["character"]
+        to: "character"
+        rule: "trimws (preserve internal whitespace and line breaks)"
+      fallback:
+        rule: "sentinel"
+        value: ""
+      constraints:
+        - "LENGTH >= 0"
+
+    # ------------------------------------------------------------------------
+    # ETL Metadata (shared)
+    # ------------------------------------------------------------------------
+    platform_id:
+      type: VARCHAR
+      required: true
+      description: "Three-letter platform_id"
+      description_zh: "三字母平台識別碼"
+      pattern: "^[a-z]{3}$|^official_website$"
+      coercion:
+        from: ["character"]
+        to: "character"
+        rule: "tolower + trimws"
+      fallback:
+        rule: "derive_from"
+        derive: "from bridge yaml canonical_target.platform"
+      constraints:
+        - "NOT NULL"
+        - "LENGTH = 3 OR platform_id = 'official_website'"
+        - "LOWER(platform_id) = platform_id"
+
+    import_timestamp:
+      type: TIMESTAMP
+      required: true
+      description: "When data was imported to raw_data"
+      description_zh: "資料匯入 raw_data 的時間戳"
+      coercion:
+        from: ["POSIXct", "character"]
+        to: "TIMESTAMP"
+        rule: "as.POSIXct(., tz = 'UTC')"
+      fallback:
+        rule: "derive_from"
+        derive: "Sys.time()"
+      constraints:
+        - "NOT NULL"
+
+    import_source:
+      type: VARCHAR
+      required: true
+      description: "Source of import"
+      description_zh: "匯入來源"
+      coercion:
+        from: ["character"]
+        to: "character"
+        rule: "tolower + trimws"
+      fallback:
+        rule: "sentinel"
+        value: "UNKNOWN_SOURCE"
+      constraints:
+        - "NOT NULL"
+        - "LENGTH > 0"
+
+# =============================================================================
+# COMPANY_PRODUCT_EXTENSION DATATYPE (D11 SKU-keyed financial extension)
+# =============================================================================
+# Per spectra change qef-product-master-redesign D11 (Phase 9 task 9.3):
+# `company_product_extension` is the SKU-keyed financial schema covering data
+# from the QEF Gsheet `SKU to ASIN` tab (185 rows x 20 cols). It is a peer to
+# the per-PL attribute tables (product_attributes_{pl_id}) — both feed into
+# the thin master `products` view via SKU and ASIN respectively.
+#
+# Why a separate datatype:
+#   - SKU-keyed (NOT ASIN-keyed) — financial cost/profit data tracks SKUs,
+#     not ASINs (one SKU may map to one ASIN, but financial accounting
+#     happens at SKU level)
+#   - Per-marketplace pricing — same SKU sold on amz_us vs amz_eu has
+#     different fees, commissions, profit margins (D2 multi-marketplace)
+#   - Bridges to a different Gsheet tab (`SKU to ASIN`, not the 12 product
+#     profile tabs)
+#   - Different update cadence (financials update monthly; product attrs
+#     update when product line catalog changes)
+#
+# DRV layer JOINs to thin master via SKU (when present) and to per-PL
+# attributes via ASIN (when present). One SKU may have NULL ASIN until
+# launched; one ASIN may have multiple SKUs across marketplaces.
+#
+# Bound by MP102 v1.2 + MP156 + MP157 + MP158 (this datatype is the D11
+# SKU extension peer, bridge target for `SKU to ASIN` tab).
+# =============================================================================
+company_product_extension:
+  description: "SKU-keyed financial schema for product cost / fee / profit data"
+  description_zh: "SKU 為主鍵的產品財務 schema(成本/費用/淨利)"
+  table_pattern: "df_{platform}_company_product_extension___raw"
+  version: "1.0"
+  physical_realization: "raw_layer"
+  primary_key:
+    - sku
+    - marketplace
+
+  required_fields:
+    # ------------------------------------------------------------------------
+    # Identity (universal, required)
+    # ------------------------------------------------------------------------
+    sku:
+      type: VARCHAR
+      description: "Stock Keeping Unit (canonical)"
+      description_zh: "庫存單位"
+      aliases:
+        - "SKU"
+        - "sku"
+        - "Sku"
+        - "AMAZON SKU"
+      coercion:
+        rule: "trimws"
+      fallback:
+        rule: "sentinel"
+        value: "UNKNOWN_SKU"
+      constraints:
+        - "NOT NULL"
+        - "LENGTH > 0"
+      required: true
+
+    marketplace:
+      type: VARCHAR
+      description: "Marketplace identifier (e.g., amz_us, amz_eu, amz_jp)"
+      description_zh: "市場識別碼(如 amz_us / amz_eu / amz_jp)"
+      aliases:
+        - "marketplace"
+        - "Marketplace"
+        - "MARKETPLACE"
+      coercion:
+        rule: "tolower + trimws"
+      fallback:
+        rule: "sentinel"
+        value: "amz_us"
+      constraints:
+        - "NOT NULL"
+      required: true
+
+    brand:
+      type: VARCHAR
+      description: "Product brand name"
+      description_zh: "品牌"
+      aliases:
+        - "brand"
+        - "Brand"
+        - "品牌"
+      coercion:
+        rule: "trimws"
+      fallback:
+        rule: "sentinel"
+        value: "UNKNOWN_BRAND"
+      constraints:
+        - "NOT NULL"
+      required: true
+
+  optional_fields:
+    # ------------------------------------------------------------------------
+    # Cross-references (link to other datatypes)
+    # ------------------------------------------------------------------------
+    amz_asin:
+      type: VARCHAR
+      description: "Amazon ASIN (link to thin master products / per-PL attribute tables); NULL until launched"
+      description_zh: "Amazon ASIN(連到 thin master);未上架前為 NULL"
+      aliases:
+        - "ASIN"
+        - "asin"
+        - "AMZ ASIN"
+        - "amz_asin"
+
+    product_line_id:
+      type: VARCHAR
+      description: "FK to df_product_line registry (e.g., blb / hsg / sgf)"
+      description_zh: "產品線識別碼(對應 df_product_line)"
+      aliases:
+        - "product_line_id"
+        - "Product Line"
+        - "產品線"
+
+    product_name:
+      type: VARCHAR
+      description: "Product display name"
+      description_zh: "商品名稱"
+      aliases:
+        - "product_name"
+        - "Product Name"
+        - "商品名稱"
+
+    # ------------------------------------------------------------------------
+    # Cost components (financial, per task 9.3 documented sources)
+    # ------------------------------------------------------------------------
+    cost_factory_price:
+      type: DOUBLE
+      description: "Factory price / cost from supplier (商品成本)"
+      description_zh: "商品成本-廠價"
+      aliases:
+        - "商品成本-廠價"
+        - "factory_price"
+        - "factory_cost"
+
+    cost_factory_price_estimated_23pct:
+      type: DOUBLE
+      description: "Estimated factory price at 23% markup (廠價預估23%)"
+      description_zh: "廠價預估23%"
+      aliases:
+        - "廠價預估23%"
+        - "factory_price_estimated"
+
+    fee_inbound_freight:
+      type: DOUBLE
+      description: "Inbound freight / head shipping fee (頭程費)"
+      description_zh: "頭程費"
+      aliases:
+        - "頭程費"
+        - "inbound_freight"
+        - "head_freight"
+
+    fee_fba:
+      type: DOUBLE
+      description: "Amazon FBA fulfillment fee (FBA費)"
+      description_zh: "FBA費"
+      aliases:
+        - "FBA費"
+        - "fba_fee"
+        - "fulfillment_fee"
+
+    fee_warehouse_rent:
+      type: DOUBLE
+      description: "Warehouse rent / storage fee (倉租)"
+      description_zh: "倉租"
+      aliases:
+        - "倉租"
+        - "warehouse_fee"
+        - "storage_fee"
+
+    fee_amazon_commission:
+      type: DOUBLE
+      description: "Amazon referral commission fee (亞馬遜抽佣)"
+      description_zh: "亞馬遜抽佣"
+      aliases:
+        - "亞馬遜抽佣"
+        - "amazon_commission"
+        - "referral_fee"
+
+    fee_amazon_commission_pct:
+      type: DOUBLE
+      description: "Amazon commission as percentage of selling price (0.0-1.0)"
+      description_zh: "亞馬遜抽佣比例(0.0-1.0)"
+      aliases:
+        - "commission_pct"
+        - "亞馬遜抽佣比例"
+
+    fee_other:
+      type: DOUBLE
+      description: "Other miscellaneous fees not categorized above"
+      description_zh: "其他費用"
+      aliases:
+        - "other_fees"
+        - "其他費用"
+
+    # ------------------------------------------------------------------------
+    # Pricing
+    # ------------------------------------------------------------------------
+    price_listing:
+      type: DOUBLE
+      description: "Current listing price on the marketplace"
+      description_zh: "市場現售價"
+      aliases:
+        - "listing_price"
+        - "current_price"
+        - "現售價"
+
+    price_msrp:
+      type: DOUBLE
+      description: "Manufacturer's suggested retail price"
+      description_zh: "建議售價"
+      aliases:
+        - "msrp"
+        - "MSRP"
+        - "建議售價"
+
+    # ------------------------------------------------------------------------
+    # Profit (derived in DRV; storing as raw is acceptable for cross-checking)
+    # ------------------------------------------------------------------------
+    net_profit:
+      type: DOUBLE
+      description: "Net profit per unit after all costs and fees (商品淨利)"
+      description_zh: "商品淨利"
+      aliases:
+        - "商品淨利"
+        - "net_profit"
+        - "profit"
+
+    profit_margin_pct:
+      type: DOUBLE
+      description: "Profit margin as percentage of selling price (0.0-1.0)"
+      description_zh: "淨利率(0.0-1.0)"
+      aliases:
+        - "profit_margin"
+        - "margin"
+        - "淨利率"
+
+    # ------------------------------------------------------------------------
+    # Lifecycle / status
+    # ------------------------------------------------------------------------
+    status:
+      type: VARCHAR
+      description: "Product lifecycle status (active / discontinued / pending)"
+      description_zh: "產品狀態(active / discontinued / pending)"
+      aliases:
+        - "status"
+        - "Status"
+        - "狀態"
+      coercion:
+        rule: "tolower + trimws"
+
+    launch_date:
+      type: DATE
+      description: "Product launch date on this marketplace"
+      description_zh: "上架日期"
+      aliases:
+        - "launch_date"
+        - "Launch Date"
+        - "上架日期"
+
+# =============================================================================
+# SCHEMA VALIDATION RULES
+# =============================================================================
+validation_rules:
+  platform_id_validation:
+    description: "Platform IDs must be exactly 3 lowercase letters, with `official_website` as the only multi-letter exception"
+    description_zh: "平台識別碼必須恰好為 3 個小寫字母,`official_website` 是唯一多字母例外"
+    valid_codes: ["cbz", "eby", "amz", "shp", "woo", "mgn", "big", "official_website"]
+    pattern: "^[a-z]{3}$|^official_website$"
+
+  timestamp_validation:
+    description: "Import timestamps must be recent (within 24 hours of current time during ETL run)"
+    description_zh: "匯入時間戳必須為近期(ETL 執行時間 24 小時以內)"
+    max_age_hours: 24
+
+  field_completeness:
+    description: "Required fields must have non-null, non-empty values; sentinels (UNKNOWN_*) count as compliant per MP154"
+    description_zh: "必填欄位不可為 null 或空值;sentinel(UNKNOWN_*)依 MP154 視為合規"
+    empty_string_equals_null: true
+    sentinel_values_compliant: true
+
+  referential_integrity:
+    description: "Foreign key relationships that should be validated"
+    description_zh: "需驗證的外鍵關係"
+    relationships:
+      - from_table: "sales"
+        from_field: "customer_id"
+        to_table: "customers"
+        to_field: "customer_id"
+        validation: "optional"
+
+      - from_table: "sales"
+        from_field: "product_id"
+        to_table: "products"
+        to_field: "product_id"
+        validation: "optional"
+
+      - from_table: "reviews"
+        from_field: "product_id"
+        to_table: "products"
+        to_field: "product_id"
+        validation: "optional"
+
+# =============================================================================
+# TYPE MAPPING
+# =============================================================================
+type_mapping:
+  description: "Mapping between schema types and R/DuckDB types"
+  description_zh: "schema 類型與 R/DuckDB 類型的對應"
+
+  VARCHAR:
+    r_types: ["character", "factor"]
+    duckdb_type: "VARCHAR"
+    notes: "String data, factors converted to character"
+    notes_zh: "字串資料,factor 轉成 character"
+
+  INTEGER:
+    r_types: ["integer", "numeric"]
+    duckdb_type: "INTEGER"
+    notes: "Whole numbers, numeric coerced if no decimals"
+    notes_zh: "整數,numeric 在無小數時可強制轉換"
+
+  NUMERIC:
+    r_types: ["numeric", "double", "integer"]
+    duckdb_type: "DOUBLE"
+    notes: "Decimal numbers, integers allowed"
+    notes_zh: "小數;允許整數"
+
+  BOOLEAN:
+    r_types: ["logical"]
+    duckdb_type: "BOOLEAN"
+    notes: "TRUE/FALSE values"
+    notes_zh: "TRUE/FALSE 值"
+
+  TIMESTAMP:
+    r_types: ["POSIXct", "POSIXlt", "Date"]
+    duckdb_type: "TIMESTAMP"
+    notes: "Date/time values, Date coerced to timestamp"
+    notes_zh: "日期/時間;Date 強制轉成 timestamp"
+
+  TEXT:
+    r_types: ["character"]
+    duckdb_type: "VARCHAR"
+    notes: "Long text content, same as VARCHAR in DuckDB"
+    notes_zh: "長文本;在 DuckDB 中等同 VARCHAR"
+
+# =============================================================================
+# BRIDGE-MAPPING NOTES (Phase 2 Addendum, 2026-04-27)
+# =============================================================================
+# These notes describe how the bridge interpreter (`fn_glue_bridge`,
+# 05_etl_utils/glue/) consumes the enrichment fields above. They are
+# advisory documentation; the binding contract is defined in MP102.
+bridge_mapping_notes:
+  alias_resolution:
+    description_en: |
+      The bridge yaml maps prerawdata source columns to canonical fields by
+      first checking explicit column_mapping entries, then falling back to
+      a case-insensitive alias lookup against the `aliases:` list.
+    description_zh: |
+      Bridge yaml 把 prerawdata 來源欄位對應到 canonical 欄位:先查明確的
+      column_mapping 條目,再做不分大小寫的 alias 查詢(對 `aliases:` 列表)。
+
+  pattern_enforcement:
+    description_en: |
+      `pattern:` regex is enforced at DDL CHECK constraint time (DuckDB
+      engine) AND at bridge mapping time (R-side validation before INSERT).
+      Both checks are required: DDL catches malformed data at write time;
+      R-side catches it earlier with a more readable error message.
+    description_zh: |
+      `pattern:` 正則在 DDL CHECK constraint(DuckDB engine)+ bridge mapping
+      時(R 端 INSERT 前驗證)兩處都會 enforce。兩道都需要:DDL 在寫入時擋住格式錯
+      誤資料;R 端則更早攔截並給可讀錯誤訊息。
+
+  fallback_application:
+    description_en: |
+      Fallback rules are applied IN ORDER:
+      1. If source value is non-null and non-empty after coercion → use it.
+      2. If `derive_from` rule applies and dependencies present → derive.
+      3. If `use_value` rule → emit the literal value.
+      4. If `sentinel` rule → emit the sentinel and log warning.
+      Fallback application is deterministic; the same input always produces
+      the same output. No silent NA per MP154.
+    description_zh: |
+      Fallback 規則套用順序:
+      1. 來源值經 coercion 後非 null 且非 empty → 使用該值。
+      2. `derive_from` 條件成立且依賴欄位存在 → 推導。
+      3. `use_value` 規則 → 發出字面值。
+      4. `sentinel` 規則 → 發出 sentinel 並記 warning。
+      Fallback 套用是 deterministic 的;相同輸入永遠產生相同輸出。依 MP154,
+      不可有 silent NA。
+
+  coercion_order:
+    description_en: |
+      Coercion runs BEFORE pattern matching and BEFORE fallback evaluation.
+      Order: read source → coerce to canonical R type → apply pattern check
+      → if fail, attempt fallback → emit final value.
+    description_zh: |
+      Coercion 在 pattern matching 與 fallback 評估之前執行。順序:讀來源 →
+      強制轉成 canonical R 類型 → 套 pattern 檢查 → 若 fail,嘗試 fallback →
+      發出最終值。

@@ -1,0 +1,10 @@
+# M70_testing module definition
+id: "M70"
+name: "testing"
+description: "Testing functionality for application components"
+category: "Testing"
+components:
+  - "M70_fn_test_app.R"
+  - "M70_fn_verify_config.R"
+dependencies:
+  - "M80_utilities"

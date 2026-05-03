@@ -1,0 +1,299 @@
+# ==============================================================================
+# eby_extensions.yaml  -  eby Platform Extension (MP157 Layer 1)
+# ==============================================================================
+# Bound by:
+#   - MP102 v1.2  (ETL Output Standardization, MP156 Tier-2 Schema Contract)
+#   - MP156       (Two-Tier Normativity, Category A - Schema Contract binding)
+#   - MP157       (Two-Layer YAML Authoring, Layer 1 platform extension)
+#   - MP158       (Glue-Driven Raw Layer Extensibility, axis 2 Step 1 target)
+#   - MP159       (Glue Authoring Boundary Immutability - immutable during bridge authoring)
+#   - SO_R038     (Schema Authoring YAML Naming Convention)
+#
+# Most recent significant edit: spectra change qef-product-master-redesign
+#   Phase 9 task 9.0e (Layer 1 binding header, 2026-04-28).
+#
+# Change discipline (same as core_schemas.yaml):
+#   - IC_P002 cross-company verification + Verified: trailer required.
+#   - Edits during a /glue-bridge skill flow are forbidden (MP159).
+#   - Adding a new field-level key requires updating _meta_schema.yaml.
+# ==============================================================================
+
+# eBay Platform Extensions
+# Following MP102: ETL Output Standardization Principle
+# Platform ID: eby
+# Last Updated: 2025-08-28
+
+# These fields extend the core schemas for eBay-specific data
+# All extension fields MUST use the eby_ prefix
+
+sales:
+  description: "eBay-specific sales transaction fields"
+  extends: "core_sales_v1"
+  fields:
+    eby_item_id:
+      type: VARCHAR
+      required: false
+      description: "eBay item number"
+      source: "item_id"
+      example: "123456789012"
+    
+    eby_transaction_id:
+      type: VARCHAR
+      required: false
+      description: "eBay transaction identifier"
+      source: "transaction_id"
+    
+    eby_buyer_username:
+      type: VARCHAR
+      required: false
+      description: "Buyer's eBay username"
+      source: "buyer_username"
+    
+    eby_buyer_email:
+      type: VARCHAR
+      required: false
+      description: "Buyer's email address"
+      source: "buyer_email"
+      privacy: "PII - handle with care"
+    
+    eby_listing_type:
+      type: VARCHAR
+      required: false
+      description: "Type of eBay listing"
+      source: "listing_type"
+      examples: ["Auction", "BuyItNow", "FixedPrice", "StoreInventory"]
+    
+    eby_feedback_score:
+      type: INTEGER
+      required: false
+      description: "Buyer's feedback score"
+      source: "feedback_score"
+    
+    eby_feedback_percentage:
+      type: NUMERIC
+      required: false
+      description: "Buyer's positive feedback percentage"
+      source: "feedback_percentage"
+    
+    eby_payment_method:
+      type: VARCHAR
+      required: false
+      description: "Payment method used"
+      source: "payment_method"
+      examples: ["PayPal", "CreditCard", "Escrow", "Other"]
+    
+    eby_shipping_service:
+      type: VARCHAR
+      required: false
+      description: "Shipping service selected"
+      source: "shipping_service"
+    
+    eby_shipping_cost:
+      type: NUMERIC
+      required: false
+      description: "Shipping cost charged"
+      source: "shipping_cost"
+    
+    eby_ship_to_city:
+      type: VARCHAR
+      required: false
+      description: "Shipping destination city"
+      source: "ship_to_city"
+    
+    eby_ship_to_state:
+      type: VARCHAR
+      required: false
+      description: "Shipping destination state/province"
+      source: "ship_to_state"
+    
+    eby_ship_to_zip:
+      type: VARCHAR
+      required: false
+      description: "Shipping destination postal code"
+      source: "ship_to_zip"
+    
+    eby_ship_to_country:
+      type: VARCHAR
+      required: false
+      description: "Shipping destination country"
+      source: "ship_to_country"
+    
+    eby_sale_date:
+      type: VARCHAR
+      required: false
+      description: "Original eBay sale date"
+      source: "sale_date"
+    
+    eby_paid_date:
+      type: VARCHAR
+      required: false
+      description: "Date payment was received"
+      source: "paid_date"
+    
+    eby_shipped_date:
+      type: VARCHAR
+      required: false
+      description: "Date item was shipped"
+      source: "shipped_date"
+    
+    eby_variation_details:
+      type: TEXT
+      required: false
+      description: "Product variation details (color, size, etc)"
+      source: "variation_details"
+    
+    eby_global_shipping:
+      type: BOOLEAN
+      required: false
+      description: "Whether Global Shipping Program was used"
+      source: "global_shipping_program"
+    
+    eby_return_policy:
+      type: VARCHAR
+      required: false
+      description: "Return policy for the item"
+      source: "return_policy"
+
+customers:
+  description: "eBay-specific customer/buyer fields"
+  extends: "core_customers_v1"
+  fields:
+    eby_username:
+      type: VARCHAR
+      required: false
+      description: "eBay username"
+      source: "buyer_username"
+      unique: true
+    
+    eby_feedback_score:
+      type: INTEGER
+      required: false
+      description: "Current feedback score"
+      source: "feedback_score"
+    
+    eby_feedback_percentage:
+      type: NUMERIC
+      required: false
+      description: "Positive feedback percentage"
+      source: "positive_feedback_percent"
+    
+    eby_member_since:
+      type: VARCHAR
+      required: false
+      description: "eBay member registration date"
+      source: "member_since"
+    
+    eby_verified:
+      type: BOOLEAN
+      required: false
+      description: "Whether user is verified"
+      source: "verified_user"
+    
+    eby_business_seller:
+      type: BOOLEAN
+      required: false
+      description: "Whether buyer is a business"
+      source: "business_seller"
+    
+    eby_country:
+      type: VARCHAR
+      required: false
+      description: "Buyer's country"
+      source: "registration_country"
+
+products:
+  description: "eBay-specific product/item fields"
+  extends: "core_products_v1"
+  fields:
+    eby_item_id:
+      type: VARCHAR
+      required: false
+      description: "eBay item number"
+      source: "item_id"
+      unique: true
+    
+    eby_listing_type:
+      type: VARCHAR
+      required: false
+      description: "Type of listing"
+      source: "listing_type"
+    
+    eby_start_price:
+      type: NUMERIC
+      required: false
+      description: "Starting price for auctions"
+      source: "start_price"
+    
+    eby_buy_it_now_price:
+      type: NUMERIC
+      required: false
+      description: "Buy It Now price if available"
+      source: "buy_it_now_price"
+    
+    eby_condition:
+      type: VARCHAR
+      required: false
+      description: "Item condition"
+      source: "condition"
+      examples: ["New", "Used", "Refurbished", "For parts"]
+    
+    eby_condition_id:
+      type: INTEGER
+      required: false
+      description: "eBay condition ID"
+      source: "condition_id"
+    
+    eby_primary_category_id:
+      type: VARCHAR
+      required: false
+      description: "Primary eBay category ID"
+      source: "primary_category_id"
+    
+    eby_primary_category_name:
+      type: VARCHAR
+      required: false
+      description: "Primary eBay category name"
+      source: "primary_category_name"
+    
+    eby_secondary_category_id:
+      type: VARCHAR
+      required: false
+      description: "Secondary eBay category ID"
+      source: "secondary_category_id"
+    
+    eby_store_category:
+      type: VARCHAR
+      required: false
+      description: "eBay store category if applicable"
+      source: "store_category"
+    
+    eby_quantity_available:
+      type: INTEGER
+      required: false
+      description: "Quantity available for sale"
+      source: "quantity_available"
+    
+    eby_watchers:
+      type: INTEGER
+      required: false
+      description: "Number of watchers"
+      source: "watch_count"
+    
+    eby_bids:
+      type: INTEGER
+      required: false
+      description: "Number of bids (for auctions)"
+      source: "bid_count"
+    
+    eby_listing_duration:
+      type: VARCHAR
+      required: false
+      description: "Listing duration"
+      source: "listing_duration"
+      examples: ["Days_3", "Days_7", "Days_30", "GTC"]
+    
+    eby_best_offer_enabled:
+      type: BOOLEAN
+      required: false
+      description: "Whether Best Offer is enabled"
+      source: "best_offer_enabled"

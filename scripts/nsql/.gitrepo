@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
+;
+[subrepo]
+	remote = git@github.com:kiki830621/NSQL.git
+	branch = main
+	commit = bb7163c36a2f924b90bbd84652c9ca930d6d7e57
+	parent = 5150b7be03d894b2692c7dc2521d12fb0b926ca9
+	method = merge
+	cmdver = 0.4.9

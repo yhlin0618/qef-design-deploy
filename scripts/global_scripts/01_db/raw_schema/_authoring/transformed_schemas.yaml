@@ -1,0 +1,572 @@
+# Transformed ETL Output Schemas (2TR Phase)
+# Following MP102: ETL Output Standardization Principle
+# Following MP108: BASE ETL 0IM→1ST→2TR Pipeline
+#
+# This file defines the standardized transformed schema fields that must be present
+# in all platform 2TR ETL outputs. These are CROSS-PLATFORM STANDARDIZED schemas.
+#
+# CRITICAL DISTINCTION:
+# - raw_data (0IM): Platform-specific field names, core schema compliance
+# - staged_data (1ST): Platform-internal standardization, type conversion
+# - transformed_data (2TR): CROSS-PLATFORM standardization - ALL platforms output identical schema
+#
+# DRV layer reads from transformed_data and expects consistent schema regardless of platform.
+#
+# Version: 1.0
+# Created: 2025-11-02
+# Author: Claude (PM Agent - Architecture Gap Resolution)
+
+# =============================================================================
+# SALES DATA TYPE (TRANSFORMED)
+# =============================================================================
+sales_transformed:
+  description: "Cross-platform standardized sales transaction data"
+  table_pattern: "df_{platform}_sales___transformed"
+  output_database: "transformed_data.duckdb"
+  version: "1.0"
+
+  required_fields:
+    # =========================================================================
+    # PRIMARY IDENTIFIERS (Cross-Platform Standard)
+    # =========================================================================
+    transaction_id:
+      type: VARCHAR
+      required: true
+      description: "Unique transaction identifier across all platforms"
+      business_definition: "Combination of order_id and line item sequence"
+      constraints:
+        - "NOT NULL"
+        - "UNIQUE"
+        - "LENGTH > 0"
+      examples:
+        - cbz: "12345_001"
+        - eby: "ORD123_SN001"
+        - amz: "AMZ-ORDER-123_1"
+
+    order_id:
+      type: VARCHAR
+      required: true
+      description: "Standardized order identifier"
+      business_definition: "Platform order number, standardized format"
+      constraints:
+        - "NOT NULL"
+        - "LENGTH > 0"
+
+    customer_id:
+      type: VARCHAR
+      required: true
+      description: "Standardized customer identifier"
+      business_definition: "Unique customer ID, can be email, username, or platform-specific ID"
+      constraints:
+        - "NOT NULL"
+        - "LENGTH > 0"
+
+    product_id:
+      type: VARCHAR
+      required: true
+      description: "Standardized product identifier"
+      business_definition: "SKU, ASIN, or platform-specific product ID"
+      constraints:
+        - "NOT NULL"
+        - "LENGTH > 0"
+
+    # =========================================================================
+    # PRODUCT INFORMATION (Standardized)
+    # =========================================================================
+    product_name:
+      type: VARCHAR
+      required: true
+      description: "Product name or title"
+      constraints:
+        - "NOT NULL"
+        - "LENGTH > 0"
+
+    sku:
+      type: VARCHAR
+      required: false
+      description: "Stock keeping unit code"
+      constraints:
+        - "LENGTH >= 0"
+
+    # =========================================================================
+    # TRANSACTION QUANTITIES (Standardized)
+    # =========================================================================
+    quantity:
+      type: INTEGER
+      required: true
+      description: "Quantity of items in this transaction line"
+      constraints:
+        - "NOT NULL"
+        - ">= 1"
+
+    # =========================================================================
+    # FINANCIAL FIELDS (Standardized - All in Same Currency Unit)
+    # =========================================================================
+    unit_price:
+      type: NUMERIC
+      required: true
+      description: "Price per unit (standardized currency)"
+      business_definition: "Price for one unit of the product"
+      constraints:
+        - "NOT NULL"
+        - ">= 0"
+      precision: "DECIMAL(10,2)"
+
+    line_total:
+      type: NUMERIC
+      required: true
+      description: "Total amount for this line (quantity × unit_price)"
+      business_definition: "Calculated as quantity * unit_price"
+      constraints:
+        - "NOT NULL"
+        - ">= 0"
+      precision: "DECIMAL(10,2)"
+      calculation: "quantity * unit_price"
+
+    discount_amount:
+      type: NUMERIC
+      required: false
+      description: "Discount applied to this line item"
+      constraints:
+        - ">= 0"
+      precision: "DECIMAL(10,2)"
+
+    tax_amount:
+      type: NUMERIC
+      required: false
+      description: "Tax amount for this line item"
+      constraints:
+        - ">= 0"
+      precision: "DECIMAL(10,2)"
+
+    # =========================================================================
+    # TIME DIMENSIONS (Standardized)
+    # =========================================================================
+    order_date:
+      type: DATE
+      required: true
+      description: "Order date in DATE format (YYYY-MM-DD)"
+      business_definition: "Date when order was placed"
+      constraints:
+        - "NOT NULL"
+      format: "YYYY-MM-DD"
+
+    order_year:
+      type: INTEGER
+      required: true
+      description: "Year extracted from order_date"
+      business_definition: "For time-series analysis and partitioning"
+      constraints:
+        - "NOT NULL"
+        - ">= 2000"
+        - "<= YEAR(CURRENT_DATE)"
+      derivation: "YEAR(order_date)"
+
+    order_month:
+      type: INTEGER
+      required: true
+      description: "Month extracted from order_date"
+      constraints:
+        - "NOT NULL"
+        - ">= 1"
+        - "<= 12"
+      derivation: "MONTH(order_date)"
+
+    order_quarter:
+      type: INTEGER
+      required: true
+      description: "Quarter extracted from order_date"
+      constraints:
+        - "NOT NULL"
+        - ">= 1"
+        - "<= 4"
+      derivation: "QUARTER(order_date)"
+
+    order_day:
+      type: INTEGER
+      required: false
+      description: "Day of month extracted from order_date"
+      constraints:
+        - ">= 1"
+        - "<= 31"
+      derivation: "DAY(order_date)"
+
+    order_weekday:
+      type: VARCHAR
+      required: false
+      description: "Day of week name (Monday, Tuesday, etc.)"
+      derivation: "WEEKDAY(order_date)"
+
+    # =========================================================================
+    # CUSTOMER INFORMATION (Optional - May Not Be Available in All Platforms)
+    # =========================================================================
+    customer_name:
+      type: VARCHAR
+      required: false
+      description: "Customer name or display name"
+      constraints:
+        - "LENGTH >= 0"
+
+    customer_email:
+      type: VARCHAR
+      required: false
+      description: "Customer email address"
+      constraints:
+        - "LENGTH >= 0"
+
+    # =========================================================================
+    # PLATFORM METADATA (Required)
+    # =========================================================================
+    platform_id:
+      type: VARCHAR
+      required: true
+      description: "Three-letter platform_id (cbz, eby, amz)"
+      constraints:
+        - "NOT NULL"
+        - "LENGTH = 3"
+        - "LOWER(platform_id) = platform_id"
+      valid_values: ["cbz", "eby", "amz", "shp", "woo"]
+
+    # =========================================================================
+    # ETL PIPELINE METADATA (Required)
+    # =========================================================================
+    transformation_timestamp:
+      type: TIMESTAMP
+      required: true
+      description: "When 2TR transformation was executed"
+      constraints:
+        - "NOT NULL"
+
+    transformation_version:
+      type: VARCHAR
+      required: false
+      description: "Version of the 2TR script that created this record"
+      constraints:
+        - "LENGTH >= 0"
+
+    etl_pipeline:
+      type: VARCHAR
+      required: true
+      description: "ETL pipeline type (BASE_SALES or DERIVED_SALES)"
+      constraints:
+        - "NOT NULL"
+      valid_values: ["BASE_SALES", "DERIVED_SALES"]
+      notes: |
+        - BASE_SALES: Sales data directly from platform (CBZ from API)
+        - DERIVED_SALES: Sales derived from JOIN (EBY from orders+details)
+
+# =============================================================================
+# CUSTOMERS DATA TYPE (TRANSFORMED)
+# =============================================================================
+customers_transformed:
+  description: "Cross-platform standardized customer data"
+  table_pattern: "df_{platform}_customers___transformed"
+  output_database: "transformed_data.duckdb"
+  version: "1.0"
+
+  required_fields:
+    customer_id:
+      type: VARCHAR
+      required: true
+      description: "Unique customer identifier"
+      constraints:
+        - "NOT NULL"
+        - "UNIQUE"
+
+    customer_email:
+      type: VARCHAR
+      required: false
+      description: "Customer email (standardized lowercase)"
+      transformation: "LOWER(TRIM(email))"
+
+    customer_name:
+      type: VARCHAR
+      required: false
+      description: "Customer full name"
+
+    registration_date:
+      type: DATE
+      required: false
+      description: "Customer registration date"
+      format: "YYYY-MM-DD"
+
+    customer_segment:
+      type: VARCHAR
+      required: false
+      description: "Customer segment classification"
+      valid_values: ["VIP", "Regular", "New", "Inactive"]
+
+    platform_id:
+      type: VARCHAR
+      required: true
+      description: "Platform ID"
+      constraints:
+        - "NOT NULL"
+        - "LENGTH = 3"
+
+    transformation_timestamp:
+      type: TIMESTAMP
+      required: true
+      description: "Transformation timestamp"
+
+# =============================================================================
+# ORDERS DATA TYPE (TRANSFORMED)
+# =============================================================================
+orders_transformed:
+  description: "Cross-platform standardized order header data"
+  table_pattern: "df_{platform}_orders___transformed"
+  output_database: "transformed_data.duckdb"
+  version: "1.0"
+
+  required_fields:
+    order_id:
+      type: VARCHAR
+      required: true
+      description: "Unique order identifier"
+      constraints:
+        - "NOT NULL"
+        - "UNIQUE"
+
+    customer_id:
+      type: VARCHAR
+      required: true
+      description: "Customer who placed the order"
+      constraints:
+        - "NOT NULL"
+
+    order_date:
+      type: DATE
+      required: true
+      description: "Order date"
+      format: "YYYY-MM-DD"
+
+    order_status:
+      type: VARCHAR
+      required: true
+      description: "Order status (standardized)"
+      valid_values: ["pending", "processing", "shipped", "delivered", "cancelled", "refunded"]
+      notes: "Platform-specific statuses must be mapped to these standard values"
+
+    order_total:
+      type: NUMERIC
+      required: true
+      description: "Total order amount"
+      precision: "DECIMAL(10,2)"
+
+    shipping_amount:
+      type: NUMERIC
+      required: false
+      description: "Shipping cost"
+      precision: "DECIMAL(10,2)"
+
+    tax_amount:
+      type: NUMERIC
+      required: false
+      description: "Tax amount"
+      precision: "DECIMAL(10,2)"
+
+    payment_method:
+      type: VARCHAR
+      required: false
+      description: "Payment method (standardized)"
+      valid_values: ["credit_card", "debit_card", "paypal", "bank_transfer", "cash_on_delivery", "other"]
+
+    platform_id:
+      type: VARCHAR
+      required: true
+      description: "Platform ID"
+
+    transformation_timestamp:
+      type: TIMESTAMP
+      required: true
+      description: "Transformation timestamp"
+
+# =============================================================================
+# PRODUCTS DATA TYPE (TRANSFORMED)
+# =============================================================================
+products_transformed:
+  description: "Cross-platform standardized product catalog data"
+  table_pattern: "df_{platform}_products___transformed"
+  output_database: "transformed_data.duckdb"
+  version: "1.0"
+
+  required_fields:
+    product_id:
+      type: VARCHAR
+      required: true
+      description: "Unique product identifier"
+      constraints:
+        - "NOT NULL"
+        - "UNIQUE"
+
+    product_name:
+      type: VARCHAR
+      required: true
+      description: "Product name"
+      constraints:
+        - "NOT NULL"
+
+    sku:
+      type: VARCHAR
+      required: false
+      description: "SKU code"
+
+    category:
+      type: VARCHAR
+      required: false
+      description: "Primary category (standardized)"
+
+    subcategory:
+      type: VARCHAR
+      required: false
+      description: "Subcategory (standardized)"
+
+    brand:
+      type: VARCHAR
+      required: false
+      description: "Brand name"
+
+    current_price:
+      type: NUMERIC
+      required: false
+      description: "Current listed price"
+      precision: "DECIMAL(10,2)"
+
+    is_active:
+      type: BOOLEAN
+      required: true
+      description: "Whether product is active"
+      default: true
+
+    platform_id:
+      type: VARCHAR
+      required: true
+      description: "Platform ID"
+
+    transformation_timestamp:
+      type: TIMESTAMP
+      required: true
+      description: "Transformation timestamp"
+
+# =============================================================================
+# TRANSFORMATION RULES
+# =============================================================================
+transformation_rules:
+  phase_requirements:
+    description: "What transformations MUST happen in 2TR phase"
+    required_transformations:
+      - rule: "Standardize all field names to cross-platform schema"
+        principle: "MP108"
+      - rule: "Convert dates to DATE type (YYYY-MM-DD)"
+        principle: "DM_R037"
+      - rule: "Extract time dimensions (year, month, quarter)"
+        principle: "MP102"
+      - rule: "Calculate derived financial fields (line_total = quantity × unit_price)"
+        principle: "DM_R040"
+      - rule: "Map platform-specific codes to standard values (order_status, payment_method)"
+        principle: "MP102"
+      - rule: "Add transformation metadata (timestamp, version, pipeline type)"
+        principle: "MP102"
+
+  prohibited_operations:
+    description: "What transformations are NOT allowed in 2TR"
+    prohibited:
+      - "Business logic calculations beyond standard derivations"
+      - "Complex aggregations (belongs in DRV layer)"
+      - "Customer segmentation (belongs in DRV layer)"
+      - "RFM analysis (belongs in DRV layer)"
+
+  structural_joins:
+    description: "JOIN operations allowed in 2TR per DM_R040"
+    allowed:
+      - type: "Structural JOIN"
+        example: "orders ⋈ order_details → sales"
+        purpose: "Create normalized entities from denormalized source"
+        principle: "DM_R040"
+    prohibited:
+      - type: "Analytical JOIN"
+        example: "sales ⋈ customer_segments"
+        purpose: "Enrichment for analysis"
+        belongs_in: "DRV layer"
+
+# =============================================================================
+# CROSS-PLATFORM MAPPING EXAMPLES
+# =============================================================================
+platform_mapping_examples:
+  sales_transaction_id:
+    cbz:
+      source: "sales_transaction_id (from 0IM line_items expansion)"
+      transformation: "Keep as transaction_id"
+    eby:
+      source: "CONCAT(order_number, '_', serial_number)"
+      transformation: "Create transaction_id from composite"
+    amz:
+      source: "AmazonOrderItemCode"
+      transformation: "Use as transaction_id"
+
+  order_status:
+    cbz:
+      mapping:
+        "待處理": "pending"
+        "處理中": "processing"
+        "已出貨": "shipped"
+        "已完成": "delivered"
+        "已取消": "cancelled"
+    eby:
+      mapping:
+        "Active": "processing"
+        "Shipped": "shipped"
+        "Complete": "delivered"
+        "Cancelled": "cancelled"
+    amz:
+      mapping:
+        "Pending": "pending"
+        "Shipped": "shipped"
+        "Delivered": "delivered"
+        "Canceled": "cancelled"
+
+# =============================================================================
+# SCHEMA VALIDATION
+# =============================================================================
+validation:
+  completeness_check:
+    description: "All required fields must be present"
+    action: "Fail 2TR script if required field missing"
+
+  type_check:
+    description: "All fields must match defined types"
+    action: "Coerce types or fail with clear error"
+
+  business_rule_check:
+    description: "Business constraints must be satisfied"
+    checks:
+      - "line_total = quantity * unit_price (within rounding tolerance)"
+      - "transaction_id is unique across all records"
+      - "order_date is valid date"
+      - "platform_id matches valid codes"
+
+  cross_platform_consistency:
+    description: "All platforms output identical schema structure"
+    action: "DRV layer validation on first run"
+
+# =============================================================================
+# USAGE NOTES
+# =============================================================================
+usage_notes:
+  for_etl_developers:
+    - "2TR MUST output to this schema - no exceptions"
+    - "Use platform-specific logic in 1ST, standardize in 2TR"
+    - "Add platform extensions to staged_data, not transformed_data"
+    - "transformed_data is the DRV input contract"
+
+  for_drv_developers:
+    - "Read from transformed_data expecting this schema"
+    - "No need to handle platform differences"
+    - "Filter by platform_id if needed"
+    - "All business logic belongs in DRV, not in assumptions about 2TR output"
+
+  migration_path:
+    - "Phase 1: Define transformed schema (this file)"
+    - "Phase 2: Update all 2TR scripts to conform"
+    - "Phase 3: Create DRV templates using transformed schema"
+    - "Phase 4: Validate cross-platform DRV execution"

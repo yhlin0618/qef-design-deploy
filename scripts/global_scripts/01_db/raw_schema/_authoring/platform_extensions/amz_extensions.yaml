@@ -1,0 +1,380 @@
+# ==============================================================================
+# amz_extensions.yaml  -  amz Platform Extension (MP157 Layer 1)
+# ==============================================================================
+# Bound by:
+#   - MP102 v1.2  (ETL Output Standardization, MP156 Tier-2 Schema Contract)
+#   - MP156       (Two-Tier Normativity, Category A - Schema Contract binding)
+#   - MP157       (Two-Layer YAML Authoring, Layer 1 platform extension)
+#   - MP158       (Glue-Driven Raw Layer Extensibility, axis 2 Step 1 target)
+#   - MP159       (Glue Authoring Boundary Immutability - immutable during bridge authoring)
+#   - SO_R038     (Schema Authoring YAML Naming Convention)
+#
+# Most recent significant edit: spectra change qef-product-master-redesign
+#   Phase 9 task 9.0e (Layer 1 binding header, 2026-04-28).
+#
+# Change discipline (same as core_schemas.yaml):
+#   - IC_P002 cross-company verification + Verified: trailer required.
+#   - Edits during a /glue-bridge skill flow are forbidden (MP159).
+#   - Adding a new field-level key requires updating _meta_schema.yaml.
+# ==============================================================================
+
+# Amazon Platform Extensions
+# Following MP102 (v1.2): ETL Output Standardization Principle
+# Bound by MP102 per MP156 Two-Tier Normativity (Category A — Schema Contract)
+# Platform ID: amz
+# Created: 2026-04-27 (spectra change `glue-layer-prerawdata-bridge`, #489 Phase 2)
+#
+# These fields extend the core schemas for Amazon-specific data.
+# All extension fields MUST use the `amz_` prefix (per platform_id naming).
+#
+# Reference data sources:
+#   - Amazon Seller Central reports (e.g., All Orders Report, Inventory Report)
+#   - Amazon SP-API (Selling Partner API) Orders / Catalog endpoints
+#   - Amazon Vendor Central feeds (where applicable)
+
+# =============================================================================
+# SALES — Amazon-specific sales transaction fields
+# =============================================================================
+sales:
+  description: "Amazon-specific sales transaction fields"
+  description_zh: "Amazon 平台專屬的銷售交易欄位"
+  extends: "core_sales_v2"
+  fields:
+    amz_marketplace_id:
+      type: VARCHAR
+      required: true
+      description: "Amazon marketplace identifier (e.g., ATVPDKIKX0DER for amazon.com, A1VC38T7YXB528 for amazon.co.jp)"
+      description_zh: "Amazon 市場識別碼(如 ATVPDKIKX0DER 為 amazon.com,A1VC38T7YXB528 為 amazon.co.jp)"
+      aliases:
+        - "marketplace"
+        - "marketplace_id"
+        - "Marketplace ID"
+        - "MarketplaceID"
+      source: "Amazon SP-API Orders.MarketplaceId"
+      pattern: "^[A-Z0-9]+$"
+      examples:
+        - "ATVPDKIKX0DER"  # US
+        - "A1F83G8C2ARO7P"  # UK
+        - "A13V1IB3VIYZZH"  # FR
+        - "A1VC38T7YXB528"  # JP
+
+    amz_fulfillment_channel:
+      type: VARCHAR
+      required: true
+      description: "Order fulfillment channel: AFN (Amazon-fulfilled / FBA) or MFN (Merchant-fulfilled / FBM)"
+      description_zh: "訂單履約管道:AFN(Amazon 履約 / FBA)或 MFN(賣家履約 / FBM)"
+      aliases:
+        - "fulfillment-channel"
+        - "fulfillment_channel"
+        - "Fulfillment Channel"
+        - "channel"
+      source: "Amazon SP-API Orders.FulfillmentChannel"
+      pattern: "^(AFN|MFN)$"
+      examples: ["AFN", "MFN"]
+
+    amz_fba_status:
+      type: VARCHAR
+      required: false
+      description: "FBA inventory status when fulfilled by Amazon (Sellable, Reserved, Inbound, Researching, etc.)"
+      description_zh: "FBA 庫存狀態(Sellable、Reserved、Inbound、Researching 等)"
+      aliases:
+        - "fba_status"
+        - "FBA Status"
+        - "inventory_status"
+      source: "Amazon SP-API FBA Inventory API"
+      examples: ["Sellable", "Reserved", "Inbound", "Researching", "Unsellable"]
+
+    amz_seller_sku:
+      type: VARCHAR
+      required: false
+      description: "Seller's internal SKU (distinct from canonical product_id which is typically ASIN)"
+      description_zh: "賣家內部 SKU(與通常為 ASIN 的 canonical product_id 不同)"
+      aliases:
+        - "seller-sku"
+        - "Seller SKU"
+        - "merchant_sku"
+        - "MSKU"
+      source: "Amazon SP-API Orders.OrderItems.SellerSKU"
+
+    amz_amazon_order_id:
+      type: VARCHAR
+      required: true
+      description: "Amazon's canonical order ID (format: 3 digits, dash, 7 digits, dash, 7 digits, e.g., 123-1234567-1234567)"
+      description_zh: "Amazon 標準訂單 ID(格式:3 碼數字-7 碼數字-7 碼數字,如 123-1234567-1234567)"
+      aliases:
+        - "amazon-order-id"
+        - "Amazon Order ID"
+        - "AmazonOrderId"
+      source: "Amazon SP-API Orders.AmazonOrderId"
+      pattern: "^[0-9]{3}-[0-9]{7}-[0-9]{7}$"
+
+    amz_is_business_order:
+      type: BOOLEAN
+      required: false
+      description: "Whether the order was placed via Amazon Business (B2B)"
+      description_zh: "訂單是否經由 Amazon Business(B2B)下單"
+      aliases:
+        - "is_business_order"
+        - "Is Business Order"
+        - "IsBusinessOrder"
+      source: "Amazon SP-API Orders.IsBusinessOrder"
+
+    amz_is_prime:
+      type: BOOLEAN
+      required: false
+      description: "Whether the order qualifies for Prime shipping benefits"
+      description_zh: "訂單是否符合 Prime 出貨優惠"
+      aliases:
+        - "is_prime"
+        - "IsPrime"
+        - "prime"
+      source: "Amazon SP-API Orders.IsPrime"
+
+    amz_promotion_ids:
+      type: TEXT
+      required: false
+      description: "Comma-separated promotion identifiers applied to the order"
+      description_zh: "套用於訂單的促銷代碼(以逗號分隔)"
+      aliases:
+        - "promotion_ids"
+        - "PromotionIds"
+        - "promotions"
+      source: "Amazon SP-API Orders.OrderItems.PromotionIds"
+      format: "Comma-separated list"
+
+    amz_shipping_service_level:
+      type: VARCHAR
+      required: false
+      description: "Shipping service level (Standard, Expedited, NextDay, SecondDay, etc.)"
+      description_zh: "出貨服務等級(Standard、Expedited、NextDay、SecondDay 等)"
+      aliases:
+        - "shipping_service_level"
+        - "ShipServiceLevel"
+        - "shipment_service_level"
+      source: "Amazon SP-API Orders.ShipmentServiceLevelCategory"
+      examples: ["Standard", "Expedited", "NextDay", "SecondDay", "SameDay"]
+
+# =============================================================================
+# CUSTOMERS — Amazon-specific customer fields
+# =============================================================================
+customers:
+  description: "Amazon-specific customer fields"
+  description_zh: "Amazon 平台專屬的顧客欄位"
+  extends: "core_customers_v2"
+  fields:
+    amz_buyer_email:
+      type: VARCHAR
+      required: false
+      description: "Amazon-anonymized buyer email (e.g., abcd1234@marketplace.amazon.com)"
+      description_zh: "Amazon 匿名化買家信箱(如 abcd1234@marketplace.amazon.com)"
+      aliases:
+        - "buyer-email"
+        - "Buyer Email"
+        - "BuyerEmail"
+      source: "Amazon SP-API Orders.BuyerInfo.BuyerEmail"
+      privacy: "PII (anonymized form); do not use for marketing"
+
+    amz_buyer_county:
+      type: VARCHAR
+      required: false
+      description: "Buyer county/region code"
+      description_zh: "買家縣市/地區代碼"
+      source: "Amazon SP-API Orders.BuyerInfo.BuyerCounty"
+
+    amz_buyer_purchase_order_number:
+      type: VARCHAR
+      required: false
+      description: "B2B buyer's PO number"
+      description_zh: "B2B 買家採購訂單號"
+      source: "Amazon SP-API Orders.BuyerInfo.PurchaseOrderNumber"
+
+    amz_buyer_tax_info:
+      type: TEXT
+      required: false
+      description: "B2B buyer tax info (JSON-serialized)"
+      description_zh: "B2B 買家稅務資訊(JSON 序列化)"
+      source: "Amazon SP-API Orders.BuyerInfo.BuyerTaxInfo"
+      format: "JSON object"
+      privacy: "PII"
+
+# =============================================================================
+# PRODUCTS — Amazon-specific product catalog fields
+# =============================================================================
+products:
+  description: "Amazon-specific product catalog fields"
+  description_zh: "Amazon 平台專屬的產品目錄欄位"
+  extends: "core_products_v2"
+  fields:
+    amz_asin:
+      type: VARCHAR
+      required: true
+      description: "Amazon Standard Identification Number (10 chars, B0 + 8 alphanumeric for new ASINs)"
+      description_zh: "Amazon 標準識別碼(10 字元;新版以 B0 + 8 個英數開頭)"
+      aliases:
+        - "asin"
+        - "ASIN"
+        - "Amazon Standard Identification Number"
+      source: "Amazon SP-API Catalog.Items.asin"
+      pattern: "^B0[A-Z0-9]{8}$|^[A-Z0-9]{10}$"
+
+    amz_parent_asin:
+      type: VARCHAR
+      required: false
+      description: "Parent ASIN for variant products (e.g., shirt color/size variants share a parent ASIN)"
+      description_zh: "變體產品的母 ASIN(同款不同顏色/尺寸的變體共用同一個母 ASIN)"
+      aliases:
+        - "parent_asin"
+        - "ParentASIN"
+      source: "Amazon SP-API Catalog.Items.relationships.parentAsins"
+      pattern: "^B0[A-Z0-9]{8}$|^[A-Z0-9]{10}$"
+
+    amz_browse_node_id:
+      type: VARCHAR
+      required: false
+      description: "Amazon browse node identifier for category navigation"
+      description_zh: "Amazon 分類瀏覽節點識別碼"
+      aliases:
+        - "browse_node_id"
+        - "BrowseNodeId"
+        - "browse_node"
+      source: "Amazon SP-API Catalog.Items.classifications.classificationId"
+
+    amz_listing_status:
+      type: VARCHAR
+      required: false
+      description: "Listing status (Active, Inactive, Incomplete, Suppressed)"
+      description_zh: "上架狀態(Active、Inactive、Incomplete、Suppressed)"
+      aliases:
+        - "listing_status"
+        - "Listing Status"
+      source: "Amazon SP-API Listings.status"
+      examples: ["Active", "Inactive", "Incomplete", "Suppressed"]
+
+    amz_buy_box_price:
+      type: NUMERIC
+      required: false
+      description: "Current buy box price (winning offer)"
+      description_zh: "目前 Buy Box 價格(勝出報價)"
+      aliases:
+        - "buy_box_price"
+        - "BuyBoxPrice"
+      source: "Amazon SP-API Pricing.GetCompetitivePricing"
+
+    amz_brand_registry_id:
+      type: VARCHAR
+      required: false
+      description: "Amazon Brand Registry brand identifier"
+      description_zh: "Amazon Brand Registry 品牌識別碼"
+      source: "Amazon Brand Registry"
+
+    amz_review_count:
+      type: INTEGER
+      required: false
+      description: "Total number of reviews on the product detail page"
+      description_zh: "產品頁面上的評論總數"
+      aliases:
+        - "review_count"
+        - "ReviewCount"
+
+    amz_average_rating:
+      type: NUMERIC
+      required: false
+      description: "Average review rating (1-5)"
+      description_zh: "平均評分(1 到 5)"
+      aliases:
+        - "average_rating"
+        - "AverageRating"
+
+    amz_seller_sku:
+      type: VARCHAR
+      required: false
+      description: "Amazon seller SKU — the seller-assigned identifier (distinct from canonical sku; some companies use the same value, others differ)"
+      description_zh: "Amazon 賣家 SKU(賣家自行指派的識別碼,可能與 canonical sku 一致或不同)"
+      aliases:
+        - "seller_sku"
+        - "Seller SKU"
+        - "Seller-SKU"
+      source: "Amazon SP-API Listings.sku"
+
+    amz_marketplace_id:
+      type: VARCHAR
+      required: false
+      description: "Amazon marketplace identifier (e.g., ATVPDKIKX0DER for amz_us, A1F83G8C2ARO7P for amz_eu) — supports multi-marketplace D2 design"
+      description_zh: "Amazon 市場識別碼(例如 amz_us 為 ATVPDKIKX0DER,amz_eu 為 A1F83G8C2ARO7P);支援 D2 多市場設計"
+      aliases:
+        - "marketplace_id"
+        - "MarketplaceId"
+        - "Marketplace ID"
+      source: "Amazon SP-API Marketplace.id"
+      examples: ["ATVPDKIKX0DER", "A1F83G8C2ARO7P", "A1VC38T7YXB528"]
+
+# =============================================================================
+# REVIEWS — Amazon-specific review fields
+# =============================================================================
+reviews:
+  description: "Amazon-specific review fields"
+  description_zh: "Amazon 平台專屬的評論欄位"
+  extends: "core_reviews_v2"
+  fields:
+    amz_verified_purchase:
+      type: BOOLEAN
+      required: false
+      description: "Whether the reviewer purchased the product on Amazon (verified buyer)"
+      description_zh: "評論者是否在 Amazon 購買過該產品(已驗證買家)"
+      aliases:
+        - "verified_purchase"
+        - "Verified Purchase"
+        - "is_verified_purchase"
+
+    amz_helpful_votes:
+      type: INTEGER
+      required: false
+      description: "Number of helpful votes received"
+      description_zh: "獲得的有幫助票數"
+      aliases:
+        - "helpful_votes"
+        - "Helpful Votes"
+
+    amz_total_votes:
+      type: INTEGER
+      required: false
+      description: "Total votes (helpful + not-helpful)"
+      description_zh: "總票數(有幫助加沒幫助)"
+      aliases:
+        - "total_votes"
+        - "Total Votes"
+
+    amz_review_title:
+      type: VARCHAR
+      required: false
+      description: "Review headline / title"
+      description_zh: "評論標題"
+      aliases:
+        - "review_title"
+        - "Review Title"
+        - "title"
+        - "headline"
+
+    amz_vine_review:
+      type: BOOLEAN
+      required: false
+      description: "Whether the review is part of Amazon Vine program"
+      description_zh: "是否為 Amazon Vine 計畫評論"
+      aliases:
+        - "vine_review"
+        - "is_vine"
+        - "Vine"
+
+# =============================================================================
+# COMPANY_PRODUCT_EXTENSION — Amazon-specific stub (D11 #460 task 9.5)
+# =============================================================================
+# Stub section to trigger per-platform SQL generation. The financial schema is
+# largely platform-agnostic (cost / fees / profit are universal accounting
+# concepts), so no amz-specific fields are added here. The per-platform SQL
+# at _generated/platforms/amz/company_product_extension.sql is identical to
+# the core version except for the table name (df_amz_company_product_extension___raw).
+company_product_extension:
+  description: "Amazon-specific extension for SKU-keyed financial schema (no extra fields; uses core schema only)"
+  description_zh: "Amazon 平台對 SKU 為主鍵的財務 schema 之擴充(無平台專屬欄位,沿用 core schema)"
+  extends: "core_company_product_extension_v1"
+  fields: {}  # No amz-specific fields; emit core schema with amz table name

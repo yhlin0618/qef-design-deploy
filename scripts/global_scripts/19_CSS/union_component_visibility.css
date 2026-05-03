@@ -1,0 +1,66 @@
+/**
+ * CSS for Union Component Pattern Visibility
+ * 
+ * @principle R19 Component Visibility Guarantee
+ * @principle P101 Minimal CSS Usage Principle
+ * 
+ * This CSS file ensures that union components are always visible
+ * when they should be, applying multiple layers of visibility guarantees.
+ */
+
+/* Core union display components - always visible when active */
+.union-component-display,
+.component-content-wrapper,
+.component-display-wrapper {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  min-height: 20px;
+}
+
+/* Specific component displays - ensure they're visible */
+.customer-display,
+.microCustomer-display,
+.micro-customer-display,
+[id*="micro-customer-display-"],
+[id*="display_customer"] {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Ensure parent containers are visible too */
+.union-display-container,
+.display-container,
+.component-container {
+  display: block !important;
+  visibility: visible !important;
+}
+
+/* Make filter components visible too */
+.union-component-filter {
+  display: block !important;
+  visibility: visible !important;
+}
+
+/* Debug styles to help troubleshoot visibility */
+.debug-info {
+  display: block !important;
+  font-size: 9px;
+  color: #999;
+  background-color: rgba(240,240,240,0.1);
+  padding: 2px;
+  margin: 2px 0;
+}
+
+/* Make error info visible */
+.display-error,
+.component-error,
+.function-error {
+  display: block !important;
+  border: 1px solid #f8d7da;
+  background-color: #f8d7da;
+  padding: 10px;
+  margin: 10px 0;
+  color: #721c24;
+}

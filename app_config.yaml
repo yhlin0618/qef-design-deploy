@@ -1,0 +1,241 @@
+# ==============================================================================
+# QEF_DESIGN Configuration
+# l4_enterprise | Created: 2026-02-02
+# ==============================================================================
+
+app:
+  name: "QEF DESIGN"
+  version: "1.0.0"
+  tier: "l4_enterprise"
+  description: "AI-powered analytics platform for QEF DESIGN"
+
+theme:
+  version: 5
+  bootswatch: cosmo
+layout: navbar
+
+brand_name: "QEF_DESIGN"
+language:
+  default: "zh_TW"
+  scopes:
+    ui_text: "zh_TW"
+    product_line_labels: "zh_TW"
+    product_attributes:
+      default: "en"
+product_lines:
+  active: all  # "all" = all product lines active; or explicit list: [hsg, blb, its, rpl]
+
+RAW_DATA_DIR: "./data/local_data/rawdata_QEF_DESIGN"
+parameters_folder: "default"
+
+# ==============================================================================
+# Database Connection (MP142: Configuration-Driven Pipeline)
+# Mode options:
+#   - "duckdb":   Force use local DuckDB file (for local development)
+#   - "supabase": Force use Supabase PostgreSQL (for deployment)
+#   - "auto":     Auto-detect (DuckDB if valid local file exists, else Supabase)
+# ==============================================================================
+database:
+  mode: "supabase"
+  duckdb:
+    path: "data/app_data/app_data.duckdb"
+    read_only: true
+
+# Startup flags
+# TEMPORARY: while QEF_DESIGN's new Supabase has no ETL'd data yet, allow
+# the Shiny app to boot with stub df_platform / df_product_line so the UI
+# renders. Turn OFF once metadata tables are populated on Supabase.
+startup:
+  allow_missing_metadata: true
+
+# ==============================================================================
+# Platforms (MP065) - 啟用的平台設為 status: "active"
+# ==============================================================================
+platforms:
+  amz:
+    status: "active"
+    etl_sources:
+      sales:
+        source_type: "excel"
+        version: "v1"
+        rawdata_pattern: "amazon_sales/*/*.xlsx"
+      keys:
+        source_type: "excel"
+        version: "v1"
+        rawdata_path: "KEYS.xlsx"
+      product_profiles:
+        source_type: "gsheets"
+        version: "v1"
+        sheet_id: "1istNxsgutIfTC9faLM7HdsQzfnphHXLXtahGKYN5oCA"
+        sheet_name_prefix: "product_profile"
+        # Tab naming: each product line has its own tab (e.g., 安全眼鏡＿hunting-safety-glasses)
+        # The import function uses product_line tab names from the sheet
+      competitor_ids:
+        source_type: "gsheets"
+        version: "v1"
+        sheet_id: "1istNxsgutIfTC9faLM7HdsQzfnphHXLXtahGKYN5oCA"
+        sheet_name: "產品對照表"
+      comment_properties:
+        source_type: "gsheets"
+        version: "v1"
+        sheet_id: "1hSIvb3lV0OILGu31FL41OL4_vSf3iVAx80pckz5hVy0"
+        # Separate sheet: comment_property_QEF_DESIGN
+        # 12 product-line tabs with topics, definitions, type, scale
+        # 0IM resolves each product_line_id to available tabs by
+        # Chinese anchor + English keyword scoring; missing tabs are skipped.
+      reviews:
+        source_type: "excel"
+        version: "v1"
+        rawdata_pattern: "amazon_reviews/**/*"
+      competitor_sales:
+        source_type: "excel"
+        version: "v1"
+        rawdata_pattern: "competitor_sales/**/*"
+      keepa:
+        source_type: "excel"
+        version: "v1"
+        rawdata_pattern: "Product sales rank*/*/*.xlsx"
+      demographic:
+        source_type: "csv"
+        version: "v1"
+        rawdata_pattern: "amazon_demographic/*.csv"
+      sku_mapping:
+        source_type: "excel"
+        version: "v1"
+        rawdata_path: "SKUtoeBay numbers/SKUtoASIN number.xlsx"
+      # D5: 新增 canonical company product master (see qef-product-master-redesign change)
+      # Gsheet single-tab flat table: one row per (sku, marketplace).
+      # 4-source resolver order: gsheet_master > gsheet_sku_asin > keys_xlsx > sku_asin_xlsx
+      # D2: marketplace PK from day 1 — marketplace_default filled when sheet column is empty.
+      company_product_master:
+        source_type: "gsheets"
+        version: "v1"
+        sheet_id: "1istNxsgutIfTC9faLM7HdsQzfnphHXLXtahGKYN5oCA"
+        sheet_name: "company_product_master"
+        marketplace_default: "amz_us"  # D2: fill when sheet marketplace col is NA
+      product_categories:
+        source_type: "gsheets"
+        version: "v1"
+        sheet_id: "1istNxsgutIfTC9faLM7HdsQzfnphHXLXtahGKYN5oCA"
+        sheet_name: "產品類別彙整表"
+      holidays:
+        source_type: "gsheets"
+        version: "v1"
+        sheet_id: "1istNxsgutIfTC9faLM7HdsQzfnphHXLXtahGKYN5oCA"
+        sheet_name: "Holiday"
+      promotion_codebook:
+        source_type: "gsheets"
+        version: "v1"
+        sheet_id: "1istNxsgutIfTC9faLM7HdsQzfnphHXLXtahGKYN5oCA"
+        sheet_name: "Promotion Codebook"
+      promotions:
+        source_type: "gsheets"
+        version: "v1"
+        sheet_id: "1istNxsgutIfTC9faLM7HdsQzfnphHXLXtahGKYN5oCA"
+        sheet_name: "Promotion"
+      term_mapping:
+        source_type: "gsheets"
+        version: "v1"
+        sheet_id: "1istNxsgutIfTC9faLM7HdsQzfnphHXLXtahGKYN5oCA"
+        sheet_name: "中英文名稱對照表"
+      # MP155 Status Surface (qef-gsheet-three-surface-redesign Phase 2).
+      # View-only Google Sheet auto-refreshed at end of company product master
+      # ETL via shared/global_scripts/05_etl_utils/amz/fn_write_status_gsheet.R.
+      # Share level: anyone-with-link viewer (no programmatic enforcement).
+      # When sheet_id is missing or "TBD", fn_write_status_gsheet silently skips.
+      # Action-as-Input pattern (MP155 Decision 4): no buttons in this sheet -
+      # business mutates Master Gsheet to resolve anomalies; the suggested_action
+      # column tells them exactly what to add to Master.
+      status_gsheet:
+        source_type: "gsheets"
+        version: "v1"
+        sheet_id: "1KKkDrfx8EIt8avSwv2tFrayS3BTZHDPGVBMocmo5ieI"  # status_QEF_DESIGN (created 2026-04-26)
+        tabs:
+          anomalies: "_sys_anomalies"
+          missing_master: "_sys_missing_master"
+          drift: "_sys_drift"
+          mapping_gaps: "_sys_mapping_gaps"  # added per amz-mapping-gap-detection (#471)
+
+# ==============================================================================
+# Google Sheets (選用)
+# 取得 Sheet ID: https://docs.google.com/spreadsheets/d/【SHEET_ID】/edit
+# ==============================================================================
+googlesheet:
+  # Legacy reference — sheet_id now managed in etl_sources per data type (DM_R037 v3.0)
+  coding: "1istNxsgutIfTC9faLM7HdsQzfnphHXLXtahGKYN5oCA"
+  # Legacy path used by all_ETL_item_profile_0IM.R (shares coding sheet)
+  product_profile: "1istNxsgutIfTC9faLM7HdsQzfnphHXLXtahGKYN5oCA"
+
+# ==============================================================================
+# Metadata Sources
+# 啟用後填入對應的 sheet_id 和 sheet_name
+# ==============================================================================
+metadata_sources:
+  amz:
+    enabled: false
+    sheet_id: "your_amz_sheet_id"
+    sheet_name: "metadata_AMZ"
+
+# ==============================================================================
+# Components (通常不需修改)
+# ==============================================================================
+components:
+  micro:
+    microCustomer:
+      primary: customer_details
+      history: customer_history
+    sales: sales_by_customer_dta
+  macro:
+    trends:
+      data_source: sales_trends
+      parameters:
+        show_kpi: true
+        refresh_interval: 300
+
+# ==============================================================================
+# Supabase Configuration (app_data deployment)
+# Values are pulled from environment variables at runtime.
+# ==============================================================================
+supabase:
+  db:
+    host_env: "SUPABASE_DB_HOST"
+    port_env: "SUPABASE_DB_PORT"
+    name_env: "SUPABASE_DB_NAME"
+    user_env: "SUPABASE_DB_USER"
+    password_env: "SUPABASE_DB_PASSWORD"
+    sslmode: "require"
+
+# ==============================================================================
+# Deployment
+# 取得方式: Posit Connect -> Account Settings -> API Keys
+# ==============================================================================
+deployment:
+  main_file: "scripts/global_scripts/10_rshinyapp_components/unions/union_production_test.R"
+  target: "posit_connect"
+  url: "https://connect.posit.cloud"
+  account_name: "your_posit_connect_account"
+  app_name: "qef_design-analytics"
+  app_id: "qef_design-analytics"
+  title: "QEF DESIGN"
+
+# ==============================================================================
+# Pipeline - 啟用對應平台 (enabled: true)
+# ==============================================================================
+pipeline:
+  platforms:
+    amz:
+      enabled: true
+      drv_groups: ["D00", "D01", "D03", "D04", "D05"]
+    all:
+      enabled: true
+      depends_on_platforms: ["amz"]
+      drv_groups: ["D01", "D03", "D04"]
+    precision:
+      enabled: false    # MAMBA-specific pipeline; QEF_DESIGN uses amz DRV for InsightForge poisson
+
+  execution:
+    parallel_workers: 2    # 同時執行的 worker 數量
+
+  scheduling:
+    mode: "manual"         # "manual" 或 "scheduled"
+    schedule: "0 2 * * 0"  # cron: 每週日 2:00 AM

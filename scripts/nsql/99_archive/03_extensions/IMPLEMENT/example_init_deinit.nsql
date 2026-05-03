@@ -1,0 +1,56 @@
+# Example of INITIALIZE_SYNTAX and DEINITIALIZE_SYNTAX in NSQL
+
+This document demonstrates how to use the INITIALIZE_SYNTAX and DEINITIALIZE_SYNTAX
+phrases in NSQL implementation directives.
+
+## S01_01_00: Data Analysis Script
+
+IMPLEMENT S01_01_00 IN update_scripts
+=== Implementation Details ===
+INITIALIZE_SYNTAX
+  $libraries = library(dplyr)
+  library(tidyr)
+  library(readr)
+  library(stringr)
+  library(DBI)
+  library(duckdb)
+  
+  $environment_setup = options(stringsAsFactors = FALSE)
+  options(scipen = 999)
+  DATA_PATH <- file.path("data", "processed")
+  RESULTS_PATH <- file.path("results", "analysis")
+  dir.create(RESULTS_PATH, recursive = TRUE, showWarnings = FALSE)
+
+# Load data
+data <- tryCatch({
+  read_csv(file.path(DATA_PATH, "sample_data.csv"), col_types = cols())
+}, error = function(e) {
+  message("Error loading data: ", e$message)
+  return(NULL)
+})
+
+# Process data
+if (!is.null(data)) {
+  results <- data %>%
+    group_by(category) %>%
+    summarize(
+      count = n(),
+      avg_value = mean(value, na.rm = TRUE),
+      total = sum(value, na.rm = TRUE)
+    ) %>%
+    arrange(desc(total))
+  
+  # Save results
+  write_csv(results, file.path(RESULTS_PATH, "analysis_results.csv"))
+}
+
+DEINITIALIZE_SYNTAX
+  $close_connections = if(exists("con") && inherits(con, "DBIConnection")) {
+    dbDisconnect(con)
+    message("Database connection closed")
+  }
+  
+  $reset_environment = rm(list = setdiff(ls(), c("results")))
+
+# Return results
+results

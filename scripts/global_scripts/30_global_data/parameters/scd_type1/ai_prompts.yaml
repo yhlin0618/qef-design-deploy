@@ -1,0 +1,1009 @@
+# OpenAI Prompt Configuration for MAMBA Dashboard
+# Central repository for all AI prompts used across the dashboard
+# Version: 1.0
+# Last Updated: 2025-08-04
+
+metadata:
+  version: "v1.1"
+  effective_date: "2026-03-05"
+  description: "Centralized OpenAI prompt templates for MAMBA dashboard components"
+  maintainer: "MAMBA Development Team"
+  purpose: "Standardize and manage all AI-generated insights across dashboard modules"
+
+# ============================================================================
+# SECTION 1: System Prompts (Common across modules)
+# ============================================================================
+system_prompts:
+  marketing_consultant:
+    role: "system"
+    content: "你是專業的電商行銷顧問，擅長數據分析和策略制定。請用繁體中文回答，提供具體可執行的建議。"
+  
+  data_analyst:
+    role: "system"
+    content: "你是資深的數據分析師，專精於電商數據解讀和商業洞察。請用繁體中文提供深入且易懂的分析。"
+  
+  product_strategist:
+    role: "system"
+    content: "你是產品策略專家，擅長產品定位和市場分析。請用繁體中文回答，著重實用性建議。"
+  
+  customer_insights_expert:
+    role: "system"
+    content: "你是客戶洞察專家，專注於客戶行為分析和市場區隔。請用繁體中文提供精準的客戶分析。"
+
+# ============================================================================
+# SECTION 2: Position Analysis Prompts
+# ============================================================================
+position_analysis:
+  # Market Segmentation (CSA) Analysis
+  csa_market_segments:
+    model: "gpt-5.4"
+    system_prompt: "{system_prompts.marketing_consultant.content}"
+    user_prompt_template: |
+      根據以下市場區隔分析結果，提供市場策略建議：
+      
+      ## 分析數據：
+      {segment_summary}
+      
+      ## 產品分佈：
+      {product_distribution}
+      
+      請按以下格式輸出：
+      
+      ### 1. 市場區隔洞察
+      分析各區隔的特徵，作現有目標市場輪廓描述，並指出平均每家可分配到的營收。市場集中度高嗎，並計算市場集中度HHI（Herfindahl–Hirschman Index）指標(注意：不要列出計算公式)和說明？市場競爭嗎，請說明？
+      
+      ### 2. 競爭定位建議
+      - 優勢區隔：如何鞏固
+      - 劣勢區隔：如何改善
+      - 空白區隔：是否進入
+      
+      ### 3. 潛在目標市場分析
+      以現有分析出來的市場區隔數來作分析，是否有曼巴MAMBA可進入的潛在目標市場？若有，我們應該在此市場區隔訴求什麼品牌特色，比較容易成功進入。注意，不要自己新增可進入的市場區隔。
+      
+      ### 4. 產品組合優化
+      基於區隔分析的產品線調整建議
+
+      ### 5. 總結
+      針對我們調查的品牌進行總結，描述現有目標市場輪廓，潛在目標市場發展契機，以及如何優化現有產品組合，提供建議。注意，請根據數據詳實分析就好，不用自己過度延伸，也不用提供KPI建議。
+      
+      限制在 2000 字內
+  
+  # Strategic Positioning Analysis
+  strategic_positioning:
+    model: "gpt-5.4"
+    system_prompt: "{system_prompts.product_strategist.content}"
+    user_prompt_template: |
+      基於以下產品定位分析，提供策略建議：
+
+      ## 四象限分析結果：
+      - 訴求象限：{appeal_products}
+      - 改善象限：{improve_products}
+      - 劣勢象限：{weakness_products}
+      - 改變象限：{change_products}
+
+      ## 關鍵指標：
+      {key_metrics}
+
+      請提供：
+      1. 各象限產品的具體行動方案
+      2. 資源配置優先順序
+      3. 短期（3個月）vs 長期（1年）策略
+
+      限制在 10000 字內
+
+  # Strategy Quadrant Analysis (from positionStrategy)
+  strategy_quadrant_analysis:
+    model: "gpt-5.4"
+    system_prompt: "{system_prompts.product_strategist.content}"
+    user_prompt_template: |
+      根據四象限策略分析結果，為該產品提供具體的行銷策略建議。
+
+      **四象限定義**（基於重要性-績效分析 IPA）：
+      - 訴求象限（高重要性+正向績效）：客戶重視且表現優異，應強力突出
+      - 改善象限（高重要性+負向績效）：客戶重視但表現不佳，需優先改善
+      - 劣勢象限（低重要性+負向績效）：客戶較不重視且表現不佳，接受現況
+      - 改變象限（低重要性+正向績效）：表現良好但客戶較不重視，可淡化或轉化
+
+      **產品四象限資料**：
+      - 訴求因素：{appeal_factors}
+      - 改善因素：{improvement_factors}
+      - 劣勢因素：{weakness_factors}
+      - 改變因素：{change_factors}
+
+      請使用以下 markdown 架構，但**只顯示該產品實際有因素的部分**：
+
+      ## 產品策略分析
+
+      整體主軸：請你根據廠商的訴求優勢因素，依據這28個品牌個性(即1.環保奉獻、2.冒險挑戰、3.創新改變、4.理念原則、5.品味優雅、6.上流高級、7.時尚引領、8.藝術美學、9.幽默高知、10.聰明懂你、11.開放包容、12.科技前沿、13.領袖成就、14.自信相信、15.自主負責、16.經典精緻、17.保護守候、18.溫暖舒適、19.熱情活力、20.友善親切、21.誠實透明、22.專業可靠、23.堅毅毅力、24.實用務實、25.性感魅力、26.感官愉悅、27.快樂夢想、28.誘惑大膽)來歸類(類似因素分析)，廠商可訴求的品牌識別度是哪一個品牌個性(包含該品牌在表現較佳的訴求的優勢因素)。注意，編號越小的品牌個性其品牌價值越高，所以你可以看企業在訴求的優勢因素中，可歸類在哪一個優勢因素，而根據這些優勢因素和產品特性，你會建議他往哪一個更高的品牌價值的品牌個性來主打，增加品牌辨識度，但注意不要出現品牌個性的編號。並請根據我們調查的競品目前(網路上找得到)的品牌個性或定位(如果有的話)，列出來和品牌比較。
+
+      ### 訴求：客戶重視且表現優異，應強力突出
+      （僅當訴求因素有內容時顯示此部分）
+      基於該產品的優勢因素，建議如何在行銷中突出這些優勢，並針對每一個優勢因素提供有創意、新奇的高熵廣告文案或有識別度的廣告文案或行銷策略建議。第二，請針對品牌識別度(與其包含的主要優勢因素)，設計一個品牌故事，來描述這些優勢因素所產生的品牌價值。
+
+      ### 改善：客戶重視但表現不佳，需優先改善
+      （僅當改善因素有內容時顯示此部分）
+      基於可改善因素，提出產品優化方向，並針對每一個因素，提供有創意、新奇的高熵廣告文案或有識別度的廣告文案或行銷策略建議。
+
+      ### 劣勢：客戶較不重視且表現不佳，接受現況
+      （僅當劣勢因素有內容時顯示此部分）
+      基於弱勢因素，建議如何在行銷中減少負面影響，並針對每一個因素，提供有創意、新奇的高熵廣告文案或有識別度的廣告文案或行銷策略建議。
+
+      ### 改變：表現良好但客戶較不重視，可淡化或轉化
+      （僅當改變因素有內容時顯示此部分）
+      基於需要改變的因素，提出重點改進建議，並針對每一個因素，提供有創意、新奇的高熵廣告文案或有識別度的廣告文案或行銷策略建議。
+
+      ### 總結：請列出下列五點：
+      第一，針對上述作總結。
+      第二，根據上述分析提供品牌印記，建議品牌的IP、顏色、LOGO、高熵的產品外觀設計(如三角形包裝)、高熵的產品名稱(如鮮萃黑巧)、高熵的廣告文案(如第四代巧克力提純技術SCe4)。注意，分析後續相同品牌時，品牌印記要有一致性。
+      第三，建議企業將上述行銷策略吹五種風以帶風向，分別是：1.跟風(將購買者變傳播者，如請購買者推薦或邀請購買者在社群傳播)、2.透過主流社群媒體傳播、3.網紅、大V、小V傳播，4.做好產品評價、5.搭上熱潮話題或人物提高流量，透過這五種風(造風)傳播品牌識別度和品牌印記，增加產品擴散速度。
+      第四，口碑行銷策略：請依照下面口碑行銷原則，提供口碑行銷策略建議：1.提高自己社交身價：提出行銷策略或廣告文案建議，讓企業能當人們在談一項產品時，會讓自己看起來像行家、不可思議或神秘感；2.觸發物：提出行銷策略或廣告文案建議，讓企業能喚起人們聯想到我們產品的刺激物，如火星巧克力棒、Budweiser與Wassup連結、瑞貝卡布萊克推出Friday歌曲；3.情緒：提出能讓企業提出富感染力的行銷策略或廣告文案，以觸發顧客對我們產品的敬畏、實用等正面情緒，如果汁機能把iPhone絞碎；4.故事：像木馬屠城記一樣，提出建議，讓企業能找出自己品牌的特洛伊木馬；5.曝光：提出鼓勵顧客作出我們期望的行為，並讓他人看見和模仿的行銷策略；6.實用價值：提出建議，能讓企業打造看起來實用的內容，並搭配高熵的廣告文案，促使人們口耳相傳。
+      第五，產品擴散策略：針對產品提出加速產品擴散的行銷策略或廣告文案建議，具體參考指標如下：1.產品有顯著的相對優勢：產品與眾不同的特色；2.產品相容性：產品可容於各種品牌；3.產品易用性：如產品安裝簡單或容易使用的廣告文案或行銷建議；4.產品可試驗性：產品的優勢可輕易被觀察到；5.產品創新的可觀察性：如拍立得可馬上拍出照片不用等。
+
+      **重要規則**：
+      - 如果某個象限沒有因素（空白或無內容），請完全跳過該部分的標題和內容
+      - 針對具體的因素變數提供實用的策略建議和廣告文案方向
+      - 要注意這些品牌識別度或品牌價值訴求的優勢因素要有一致性，不可以互相矛盾
+      - 保持 markdown 格式，不要用程式碼區塊包起來
+      - 注意，這是跨境電商的行銷策略，不能提供隔日送達、24小時送達、分期零利率、縣市配送、頁面加上物流時程可視化條或描述與產品無關的例子如：更亮/更穩/更省電/更靜音等相關策略
+
+      限制在 10000 字內
+
+
+  # CSA Segment Naming (AI-powered segment naming)
+  csa_segment_naming:
+    model: "gpt-5.4"
+    system_prompt: "{system_prompts.marketing_consultant.content}"
+    user_prompt_template: |
+      請為以下市場區隔命名，使用有意義且易記的名稱。
+
+      {cluster_summary}
+
+      請只回傳 R 向量格式: c("Name1", "Name2", ...)
+
+# ============================================================================
+# SECTION 3: Poisson Analysis Prompts
+# ============================================================================
+poisson_analysis:
+  # Comment Analysis (Market Track)
+  market_track_strategy:
+    model: "gpt-5.4"
+    system_prompt: "你是專業的電商口碑管理顧問，擅長評分優化和市場定位策略。請用繁體中文回答。"
+    user_prompt_template: |
+      根據以下市場賽道（口碑評分）分析數據，提供策略報告。
+      
+      ## 口碑類型影響力統計：
+      {rating_summary}
+      
+      ## 前8大影響因素：
+      {top_factors}
+      
+      請按以下格式輸出：
+      
+      ## 🌟 市場賽道策略報告
+      
+      ### 1. 口碑影響力診斷
+      請列出具有顯著性的口碑指標，並依照邊際效應值大小，依序列出這些顯著的因素，並說明賽道倍數的商業意義。
+      
+      ### 2. 評分提升行動方案
+       針對邊際效應正值，且具顯著性的口碑因素，各提供一項具體改善建議，和試著協助發展行銷策略、廣告文案，並用說故事的方式呈現廣告：
+      - 因素名稱：具體行動（1000字內）
+      
+      ### 3. 競爭者對比策略
+      依照因素的顯著性條件下，依照邊際效應值大小依序列出這些顯著的因素，並基於上述口碑影響力分析，建議：
+      - 如何突出優勢評分
+      - 如何改善劣勢評分
+      - 市場定位調整方向
+      
+      **注意**：
+      - 保持專業但易懂的語言
+      - 提供具體可執行的建議
+      - 限制在 2000 字內
+ 
+  # Feature Analysis (Precision Marketing)
+  precision_marketing_strategy:
+    model: "gpt-5.4"
+    system_prompt: "{system_prompts.data_analyst.content}"
+    user_prompt_template: |
+      根據以下產品屬性影響力分析，提供精準行銷策略。
+      
+      ## 屬性影響力統計：
+      {attributes_summary}
+      
+      ## 關鍵屬性詳情：
+      {key_attributes}
+      
+      請按以下格式輸出：
+      
+      ### 📊 產品屬性重要性分析
+      
+      #### 1. 關鍵正向屬性
+      請列出所有對銷售正向倍數成長(正值)的具顯著性的關鍵因素(列出變數英文)，各提供一句20字內的轉化放大語句，可直接用於eBay和官網商品頁。
+
+      #### 2.顧客購買動機洞察，若無則此標題和內容省略
+      列出上述哪些具顯著性的關鍵因素(列出變數英文)，是影響顧客購買動機的顯著關鍵變數？請各提供一句50字內的轉化放大語句，可直接用於eBay和官網商品頁。
+
+      #### 3.產品解決顧客什麼痛點，若無則此標題和內容省略
+      列出上述哪些具顯著性的關鍵因素(列出變數英文)，是你產品解決顧客什麼痛點？請各提供一句50字內的轉化放大語句，可直接用於eBay和官網商品頁。
+
+      #### 4.你交付給顧客的是什麼，若無則此標題和內容省略
+      列出上述哪些具顯著性的關鍵因素(列出變數英文)，是你交付給顧客的是什麼？請各提供一句50字內的轉化放大語句，可直接用於eBay和官網商品頁。
+
+      #### 5.產品使用場景為何，若無則此標題和內容省略
+      列出上述哪些具顯著性，且與你產品的使用場景(列出變數英文)相關的變數，請各提供一句50字內的轉化放大語句，可直接用於eBay和官網商品頁。
+
+      #### 6.情緒價值
+      若上述具顯著性的關鍵因素(列出變數英文)中，有符合馬斯洛需求理論所描述的生理需求(基本滿足與五個感官快樂)、安全需求(降低焦慮、確保可靠)、社會情感需求(歸屬感、受認同)、自尊需求(被尊重、展現能力)、自我實現需求(追求夢想、突破極限)等需求相關的優勢因素，請據此列出這些關鍵因素符合馬斯洛需求理論的各需求下的因素，並提供行銷策略、廣告文案和撰寫品牌故事。最後提醒企業將這五種情緒價值疊加提供給顧客。注意：請不要列出生理需求、安全需求、社會情感需求、自尊需求和自我實現等字。
+
+      
+      #### 2. 行銷文案建議
+      基於1.關鍵正向屬性、2.顧客購買動機、3.產品解決顧客痛點、4.交付給顧客的是什麼、5.產品使用場景(如賽車跑道)、6.提供情緒價值等觀點，提供：
+      - 依據前述分別提出行銷策略優化建議，以突出關鍵因素，並依據前述討論的變數，增加：7.讓消費者被看見的行銷策略建議(如：裝年輕、裝X、裝圈層、裝高級、裝幸福、裝懂、裝自信、裝正確、裝時尚、裝成就)，注意不要寫出被看見十種「裝」字樣、8.前述談到的五種風(跟風、社群媒體、大V、評價、熱潮)策略、9.錨點策略，如：(1)產品材質(如產品經過甚麼標準認證)、(2)品牌歷史(如百年工藝)、(3)產品特色(如歐美原裝進口或適用各種車款)、(4)品牌工藝(如經過什麼工藝過程)、(5)零(如零碳排)、(6)銷量(如No.1百萬銷量經典款)、(7)品牌聯名(如MAMBA和某知名賽車手聯名)。
+      
+      #### 3. 關鍵字廣告投放策略
+      - 請針對上述所有對銷售倍數成長的具顯著性的關鍵因素，尋找消費者會在網站上搜尋的關鍵字提供關鍵字廣告投放策略
+      
+      #### 4. 口碑行銷策略
+      請依照下面口碑行銷原則，提供口碑行銷策略建議：1.提高自己社交身價：提出行銷策略或廣告文案建議，讓企業能當人們在談一項產品時，會讓自己看起來像行家、不可思議或神秘感；2.觸發物：提出行銷策略或廣告文案建議，讓企業能喚起人們聯想到我們產品的刺激物，如火星巧克力棒、Budweiser與Wassup連結、瑞貝卡布萊克推出Friday歌曲；3.情緒：提出能讓企業提出富感染力的行銷策略或廣告文案，以觸發顧客對我們產品的敬畏、實用等正面情緒，如果汁機能把iPhone絞碎；4.故事：像木馬屠城記一樣，提出建議，讓企業能找出自己品牌的特洛伊木馬；5.曝光：提出鼓勵顧客作出我們期望的行為，並讓他人看見和模仿的行銷策略；6.實用價值：提出建議，能讓企業打造看起來實用的內容，並搭配高熵的廣告文案，促使人們口耳相傳。注意：請不要寫出特洛伊木馬字樣。
+      
+      #### 5. 產品擴散策略
+      針對產品提出加速產品擴散的行銷策略或廣告文案建議，具體參考指標如下：1.產品有顯著的相對優勢：產品與眾不同的特色；2.產品相容性：產品可容於各種品牌；3.產品易用性：如產品安裝簡單或容易使用的廣告文案或行銷建議；4.產品可試驗性：產品的優勢可輕易被觀察到；5.產品創新的可觀察性：如拍立得可馬上拍出照片不用等。
+
+      #### 6. 產品改進優先序
+      請依據上述哪些具顯著性的關鍵重要產品屬性，並依照係數由高到低，依序列出需要改進的屬性及原因。
+      
+      限制在 10000 字內
+  
+  # Product Development Suggestions
+  product_development_strategy:
+    model: "gpt-5.4"
+    system_prompt: "{system_prompts.product_strategist.content}"
+    user_prompt_template: |
+      請詳實列出所有邊際效用正值的變數，並依據係數大小排序，依序提出新產品開發的建議。
+      
+      ## 正向影響屬性資料：
+      {positive_attributes}
+      
+      請按以下格式輸出：
+      
+      ## 🚀 AI 新產品開發建議報告
+      
+      ### 1. 高影響力屬性分析
+      請詳實列出上述與製造產品本身相關且對銷售具有正向顯著性的變數(邊際效應%必須是正值)，並依據係數大小排序重要屬性，說明它們對銷量的正向影響程度。最後列出未來新品可以增加哪些屬性，中英文對照。
+      
+      ### 2. 產品開發優先順序
+      請詳實列出上述與製造產品本身相關且對銷售具有正向顯著性的變數(邊際效應%必須是正值)，並依據係數大小排序，建議新產品開發的優先順序：
+      - 核心功能（賽道倍數>2.0的屬性）
+      - 增值功能（賽道倍數1.2-2.0的屬性）
+      - 輔助功能（其他正向屬性）
+      
+      ### 3. 具體產品改進建議
+      請列出上述與製造產品本身相關且對銷售具有正向顯著性的變數(邊際效應%必須是正值)，並依據係數大小排序，各提供：
+      - 屬性名稱：具體改進方向（50字內）
+      - 預期效果：對銷量的潛在影響
+      
+      ### 4. 市場機會評估
+      請列出上述哪些對銷售具有正向顯著性的變數(邊際效應%必須是正值)，提供：
+      - 未來產品趨勢預測
+      - 競爭優勢建立方向
+      - 目標客群偏好分析
+      
+      **注意**：
+      - 提供可執行的產品開發建議
+      - 注意，新產品開發的建議一定要與產品屬性有關，像是Installation time、Warranty length、Emissions compliance、Financing options、Discounted price on sales page...等請作好判斷，與產品屬性無關的變數千萬不要列
+      - 基於數據證據支持建議
+      - 限制在 10000 字內
+  
+  # Time Analysis
+  time_trend_analysis:
+    model: "gpt-5.4"
+    system_prompt: "{system_prompts.data_analyst.content}"
+    user_prompt_template: |
+      基於以下時間趨勢分析，提供市場洞察：
+      
+      ## 時間段表現：
+      {time_performance}
+      
+      ## 趨勢變化：
+      {trend_changes}
+      
+      請分析：
+      1. 銷售高峰期特徵與原因
+      2. 低谷期的改善策略
+      3. 季節性行銷建議
+      4. 庫存管理優化方向
+      
+      限制在 350 字內
+
+# ============================================================================
+# SECTION 4: Customer Analysis Prompts
+# ============================================================================
+customer_analysis:
+  # Customer DNA Analysis
+  customer_dna_insights:
+    model: "gpt-5.4"
+    system_prompt: "{system_prompts.customer_insights_expert.content}"
+    user_prompt_template: |
+      根據以下客戶 DNA 分析結果，提供客戶策略建議：
+      
+      ## RFM 分析結果：
+      {rfm_summary}
+      
+      ## 客戶分群特徵：
+      {segment_characteristics}
+      
+      ## 價值分佈：
+      {value_distribution}
+      
+      請提供：
+      
+      ### 1. 客戶群體診斷
+      - 各群體的商業價值評估
+      - 健康度分析（流失風險）
+      
+      ### 2. 差異化經營策略
+      針對每個主要客群：
+      - 溝通策略（頻率、內容、渠道）
+      - 產品推薦策略
+      - 優惠策略
+      
+      ### 3. 客戶價值提升計劃
+      - 如何提升低價值客戶
+      - 如何維護高價值客戶
+      - 如何激活沉睡客戶
+      
+      限制在 450 字內
+
+  # Customer Activity (CAI) Insights
+  activity_insights:
+    model: "gpt-5.4"
+    system_prompt: "{system_prompts.customer_insights_expert.content}"
+    user_prompt_template: |
+      分析以下客戶活躍度 (CAI) 數據，提供行銷策略建議：
+
+      ## 客戶活躍度摘要
+      - 總客戶數：{total_customers}
+      - 漸趨活躍佔比：{active_pct}%
+      - 穩定佔比：{stable_pct}%
+      - 漸趨靜止佔比：{declining_pct}%
+      - 平均 CAI 指數：{avg_cai}
+      - CAI 中位數：{cai_median}
+      - 平均客單價：{avg_monetary}
+      - 平均購買頻率：{avg_frequency}
+
+      請提供：
+
+      ### 1. 數據解讀
+      2-3 句話概述客戶活躍度現況
+
+      ### 2. 關鍵發現
+      列出 3 個重點發現
+
+      ### 3. 行銷策略建議
+      針對各活躍度分群（漸趨活躍、穩定、漸趨靜止）提供具體行銷策略
+
+      限制在 400 字內
+
+  # Customer Status (NES) Insights
+  status_insights:
+    model: "gpt-5.4"
+    system_prompt: "{system_prompts.customer_insights_expert.content}"
+    user_prompt_template: |
+      分析以下客戶狀態 (NES) 數據，提供流失預防策略：
+
+      ## 客戶狀態摘要
+      - 總客戶數：{total_customers}
+      - NES 分佈：{nes_distribution}
+
+      ## 流失風險
+      {churn_risk_summary}
+
+      ## 存活機率
+      {alive_probability_summary}
+
+      請提供：
+
+      ### 1. 數據解讀
+      2-3 句話概述客戶狀態與流失風險現況
+
+      ### 2. 關鍵發現
+      列出 3 個重點發現（特別關注高風險客群）
+
+      ### 3. 流失預防策略
+      針對各 NES 狀態（新客戶、主力客戶、淺眠客戶、半睡客戶、沉睡客戶）提供具體策略
+
+      ### 4. 優先行動
+      列出最緊急的 2-3 個行動項目
+
+      限制在 450 字內
+
+  # Customer Structure (Base Value) Insights
+  structure_insights:
+    model: "gpt-5.4"
+    system_prompt: "{system_prompts.customer_insights_expert.content}"
+    user_prompt_template: |
+      分析以下客戶結構數據，提供經營建議：
+
+      ## 客戶結構摘要
+      - 總客戶數：{total_customers}
+
+      ## 購買週期分析
+      {purchase_cycle_summary}
+
+      ## 消費分析
+      {spending_summary}
+
+      ## PCV / CRI 指標
+      {pcv_cri_summary}
+
+      請提供：
+
+      ### 1. 數據解讀
+      2-3 句話概述客戶結構特徵
+
+      ### 2. 購買週期診斷
+      分析購買週期分佈的商業意義，P20/P50/P80 各代表什麼類型的客戶
+
+      ### 3. 經營策略建議
+      - 針對高 PCV 客群的維護策略
+      - 針對低 CRI 客群的激活策略
+      - 購買週期優化建議
+
+      限制在 400 字內
+
+  # Customer Lifecycle (CLV) Insights
+  lifecycle_insights:
+    model: "gpt-5.4"
+    system_prompt: "{system_prompts.customer_insights_expert.content}"
+    user_prompt_template: |
+      分析以下客戶生命週期預測數據，提供戰略建議：
+
+      ## 客戶生命週期摘要
+      - 總客戶數：{total_customers}
+
+      ## CLV 分佈
+      {clv_distribution}
+
+      ## 存活機率
+      {survival_summary}
+
+      ## BTYD 預測
+      {btyd_predictions}
+
+      請提供：
+
+      ### 1. 數據解讀
+      2-3 句話概述客戶生命週期價值現況
+
+      ### 2. 關鍵發現
+      列出 3 個重點（關注高價值低存活客戶）
+
+      ### 3. 戰略建議
+      - 高 CLV + 高存活：如何深耕擴大
+      - 高 CLV + 低存活（搶救名單）：緊急挽回策略
+      - 低 CLV + 高存活：如何提升價值
+      - 低 CLV + 低存活：資源配置建議
+
+      限制在 450 字內
+
+  # Micro Customer Analysis
+  micro_customer_strategy:
+    model: "gpt-5.4"
+    system_prompt: "{system_prompts.customer_insights_expert.content}"
+    user_prompt_template: |
+      基於以下個體客戶分析，提供精準營銷建議：
+
+      ## 客戶概況：
+      {customer_profile}
+
+      ## 購買行為：
+      {purchase_behavior}
+
+      ## 偏好分析：
+      {preference_analysis}
+
+      請提供個性化策略：
+      1. 下次購買時機預測與觸達策略
+      2. 產品推薦清單（基於歷史偏好）
+      3. 專屬優惠設計
+      4. 忠誠度提升方案
+
+      限制在 300 字內
+
+  # Comprehensive Diagnosis — TagPilot 全面客戶診斷 (Issue #271, #315)
+  comprehensive_diagnosis:
+    model: "gpt-5.4"
+    system_prompt: "{system_prompts.customer_insights_expert.content}"
+    user_prompt_template: |
+      你正在為電商品牌進行一份全面的客戶資料健檢報告。
+      以下是來自 11 項指標的綜合分析結果，請整合所有資訊給出整體診斷。
+
+      ## 1. RFM 概況（Recency / Frequency / Monetary）
+      {rfm_summary}
+
+      ## 2. 客戶活躍指數（CAI）
+      {cai_summary}
+
+      ## 3. 新舊客狀態（NES）
+      {nes_summary}
+
+      ## 4. 平均購買間隔（IPT）
+      {ipt_summary}
+
+      ## 5. 過去顧客價值（PCV）
+      {pcv_summary}
+
+      ## 6. 各客群平均客單價（AOV by NES）
+      {aov_by_segment}
+
+      ## 7. 交易穩定度（sigma_hnorm）
+      {consistency_summary}
+
+      ## 8. 顧客終生價值（CLV）
+      {clv_summary}
+
+      ## 9. 存活機率（P(alive)）
+      {palive_summary}
+
+      ## 10. 預期交易次數（BG/NBD）
+      {expected_tx_summary}
+
+      ## 11. 顧客風險指數（CRI / RSV）
+      {cri_summary}
+
+      請依以下結構輸出整體診斷報告：
+
+      ### 整體健康評分
+      以 A/B/C/D 四級評估目前客戶體質，一句話說明理由
+
+      ### 三大優勢
+      目前做得好的地方（各一句話）
+
+      ### 三大警訊
+      最需要注意的問題（各一句話）
+
+      ### 行銷策略建議
+      - 立即行動（本週）：
+      - 短期改善（1 個月）：
+      - 中期佈局（3 個月）：
+
+      限制在 800 字內
+
+# ============================================================================
+# SECTION 4B: VitalSigns Analysis Prompts
+# ============================================================================
+vitalsigns_analysis:
+  # Revenue Pulse Insights
+  revenue_pulse_insights:
+    model: "gpt-5.4"
+    system_prompt: "{system_prompts.customer_insights_expert.content}"
+    user_prompt_template: |
+      分析以下營收脈搏數據，提供營收優化建議：
+
+      ## 分析範圍
+      {filter_context}
+
+      ## 營收摘要
+      - 總客戶數：{total_customers}
+
+      ## 營收與 ARPU
+      {revenue_summary}
+
+      ## Pareto 分析
+      {pareto_summary}
+
+      ## 新客 vs 主力客客單價比較
+      {aov_comparison}
+
+      ## 交易一致性
+      {consistency_summary}
+
+      請提供：
+
+      ### 1. 數據解讀
+      2-3 句話概述營收健康度
+
+      ### 2. 關鍵發現
+      列出 3 個重點（營收集中度、客單價差異、消費穩定性）
+
+      ### 3. 營收成長策略
+      - 如何提升新客轉換後的客單價
+      - 如何降低營收集中度風險
+      - 如何提升交易一致性
+
+      限制在 400 字內
+
+  # Customer Acquisition Insights
+  acquisition_insights:
+    model: "gpt-5.4"
+    system_prompt: "{system_prompts.customer_insights_expert.content}"
+    user_prompt_template: |
+      分析以下客戶獲取數據，提供獲客與轉換策略：
+
+      ## 分析範圍
+      {filter_context}
+
+      ## 客戶獲取摘要
+      - 總客戶數：{total_customers}
+
+      ## NES 客戶結構
+      {nes_distribution}
+
+      ## 轉換漏斗
+      {funnel_summary}
+
+      ## 消費概況
+      {spending_summary}
+
+      請提供：
+
+      ### 1. 數據解讀
+      2-3 句話概述客戶獲取與轉換現況
+
+      ### 2. 關鍵發現
+      列出 3 個重點（新客佔比、回購轉換率、核心客戶比例）
+
+      ### 3. 獲客策略建議
+      - 新客培育策略
+      - 首購到二購的轉換提升方案
+      - 多次購買客戶的深耕策略
+
+      限制在 400 字內
+
+  # Growth Validation Insights (#416)
+  growth_insights:
+    model: "gpt-5.4"
+    system_prompt: "{system_prompts.customer_insights_expert.content}"
+    user_prompt_template: |
+      分析以下業績成長驗證資料,提供「品牌 vs 品類」相對表現解讀:
+
+      ## 分析範圍
+      {filter_context}
+
+      ## 最新月份指標
+      - 最新月份:{latest_month}
+      - 品牌成長率:{brand_pct}
+      - 品類平均成長率:{category_pct}
+      - 超額成長率(差值,pp):{excess_pp}
+
+      ## 全期間表現
+      {outperform_summary}
+      落後品類月數:{underperform_count}
+
+      請提供:
+
+      ### 1. 數據解讀
+      2-3 句話概述本品牌相對品類的成長表現
+
+      ### 2. 關鍵發現
+      列出 3 個重點(超額成長率正負方向、與品類差距大小、近期趨勢變化)
+
+      ### 3. 行動建議
+      - 若超額為正:如何維持並擴大領先(例:加碼勝出 platform / product line)
+      - 若超額為負:診斷落後因素(產品競爭力 / 行銷投入 / 通路覆蓋)
+      - 若資料不足:列出補完資料的優先順序
+
+      限制在 350 字內
+
+  # World Market Map Insights
+  world_map_insights:
+    model: "gpt-5.4"
+    system_prompt: "{system_prompts.customer_insights_expert.content}"
+    user_prompt_template: |
+      分析以下地理市場分佈數據，提供市場拓展策略：
+
+      ## 分析範圍
+      {filter_context}
+
+      ## 市場分佈摘要
+      - 涵蓋國家數：{total_countries}
+      - 最大市場：{largest_market}
+
+      ## 國家營收分佈
+      {country_revenue_summary}
+
+      ## 市場集中度
+      {concentration_summary}
+
+      ## 美國州級分佈
+      {state_summary}
+
+      請提供：
+
+      ### 1. 數據解讀
+      2-3 句話概述地理市場分佈現況
+
+      ### 2. 關鍵發現
+      列出 3 個重點（市場集中度、次要市場潛力、地理多元化程度）
+
+      ### 3. 市場拓展策略
+      - 主力市場（最大國家）的深耕策略
+      - 具成長潛力的次要市場開發方案
+      - 地理風險分散建議
+      - 若有美國州級數據，分析州別集中度與機會
+
+      限制在 500 字內
+
+  # Customer Engagement Insights
+  engagement_insights:
+    model: "gpt-5.4"
+    system_prompt: "{system_prompts.customer_insights_expert.content}"
+    user_prompt_template: |
+      分析以下客戶參與度數據，提供互動提升策略：
+
+      ## 分析範圍
+      {filter_context}
+
+      ## 客戶參與度摘要
+      - 總客戶數：{total_customers}
+
+      ## 活躍度指標
+      {engagement_summary}
+
+      ## 購買模式
+      {purchase_pattern}
+
+      ## 忠誠度階梯
+      {loyalty_ladder}
+
+      ## 再激活機會
+      {reactivation_summary}
+
+      請提供：
+
+      ### 1. 數據解讀
+      2-3 句話概述客戶參與度現況
+
+      ### 2. 關鍵發現
+      列出 3 個重點（CAI 分佈、購買頻率、忠誠度階梯健康度）
+
+      ### 3. 互動提升策略
+      - 提升 CAI 低迷客群的活躍度
+      - 縮短購買間隔的策略
+      - 忠誠度階梯升級方案
+      - 沉睡客戶再激活優先順序
+
+      限制在 450 字內
+
+  # Customer Retention Insights
+  retention_insights:
+    model: "gpt-5.4"
+    system_prompt: "{system_prompts.customer_insights_expert.content}"
+    user_prompt_template: |
+      分析以下客戶留存數據，提供留存優化策略：
+
+      ## 分析範圍
+      {filter_context}
+
+      ## 客戶留存摘要
+      - 總客戶數：{total_customers}
+
+      ## 留存率概況
+      {retention_summary}
+
+      ## NES 分佈
+      {nes_distribution}
+
+      ## 流失風險分析
+      {churn_risk_summary}
+
+      ## 風險價值
+      {value_at_risk}
+
+      請提供：
+
+      ### 1. 數據解讀
+      2-3 句話概述留存健康度與流失風險
+
+      ### 2. 關鍵發現
+      列出 3 個重點（留存率、高風險客群特徵、價值損失風險）
+
+      ### 3. 留存策略建議
+      - 新客留存（降低首次流失率）
+      - 主力客深耕（提升忠誠度）
+      - 淺眠客喚醒（最高 ROI 投入）
+      - 半睡/沉睡客的成本效益分析
+
+      ### 4. 緊急行動
+      列出最優先的 2-3 個行動項目
+
+      限制在 500 字內
+
+  # Macro Trends Insights (Issue #278)
+  macro_trends_insights:
+    model: "gpt-5.4"
+    system_prompt: "{system_prompts.customer_insights_expert.content}"
+    user_prompt_template: |
+      分析以下月度總體趨勢資料，提供營運趨勢洞察與策略建議：
+
+      {data_summary}
+
+      請提供：
+
+      ### 1. 趨勢解讀
+      2-3 句話概述營收與訂單的整體走勢（成長/衰退/震盪）
+
+      ### 2. 關鍵發現
+      列出 3 個重點：
+      - 營收趨勢（MoM / YoY 變化方向與幅度）
+      - 訂單量與客戶數的連動關係
+      - 平均客單價（AOV）的變化趨勢
+
+      ### 3. 季節性與異常
+      - 是否有明顯的季節性高峰/低谷
+      - 是否有異常月份需要關注
+
+      ### 4. 策略建議
+      - 短期（本月）：應對當前趨勢的即時行動
+      - 中期（1-3 個月）：趨勢延續下的佈局建議
+
+      限制在 450 字內
+
+  # Comprehensive Diagnosis — VitalSigns 全面營運診斷 (Issue #280, #326)
+  comprehensive_diagnosis:
+    model: "gpt-5.4"
+    system_prompt: "{system_prompts.customer_insights_expert.content}"
+    user_prompt_template: |
+      你正在為電商品牌進行一份全面的營運健康診斷報告。
+      以下是來自 19+ 項營運指標的綜合分析結果，請整合所有資訊給出整體診斷。
+
+      ## 營收概況
+      {revenue_summary}
+
+      ## 客戶結構
+      {customer_structure}
+
+      ## 留存與流失
+      {retention_summary}
+
+      ## 活躍度與互動
+      {engagement_summary}
+
+      ## 成長趨勢
+      {growth_summary}
+
+      ## 全球市場分布
+      {geographic_summary}
+
+      請依以下結構輸出整體診斷報告：
+
+      ### 整體健康評分
+      以 A/B/C/D 四級評估目前營運體質，一句話說明理由
+
+      ### 三大優勢
+      目前做得好的地方（各一句話）
+
+      ### 三大警訊
+      最需要注意的問題（各一句話）
+
+      ### 行銷策略建議
+      - 立即行動（本週）：
+      - 短期改善（1 個月）：
+      - 中期佈局（3 個月）：
+
+      限制在 800 字內
+
+# ============================================================================
+# SECTION 5: Integration and Reporting Prompts
+# ============================================================================
+integrated_insights:
+  # Executive Summary
+  executive_dashboard_summary:
+    model: "gpt-5.4"
+    system_prompt: "你是資深的商業策略顧問，擅長整合多維度數據提供執行層級的洞察。請用繁體中文撰寫。"
+    user_prompt_template: |
+      整合以下各模組分析結果，提供執行摘要：
+      
+      ## 市場定位分析：
+      {position_summary}
+      
+      ## 產品屬性影響：
+      {product_attributes}
+      
+      ## 客戶洞察：
+      {customer_insights}
+      
+      ## 口碑表現：
+      {reputation_metrics}
+      
+      請撰寫執行摘要：
+      
+      ### 📊 經營現況總覽
+      （100字內的整體診斷）
+      
+      ### 🎯 三大關鍵發現
+      1. [最重要的洞察]
+      2. [次重要的發現]
+      3. [潛在機會或風險]
+      
+      ### 💡 行動建議優先序
+      - 立即行動（1個月內）：
+      - 短期改善（3個月內）：
+      - 中期佈局（6個月內）：
+      
+      ### 📈 預期成效
+      若執行建議，預估可帶來的改善
+      
+      限制在 500 字內
+
+# ============================================================================
+# SECTION 6: Prompt Engineering Guidelines
+# ============================================================================
+guidelines:
+  formatting:
+    - "使用 Markdown 格式化輸出"
+    - "數字使用阿拉伯數字"
+    - "百分比保留到小數點後一位"
+    - "金額使用千分位符號"
+  
+  tone:
+    - "專業但不艱澀"
+    - "具體且可執行"
+    - "正面積極的語調"
+    - "避免過度技術性用語"
+  
+  structure:
+    - "先總結後細節"
+    - "使用條列式說明"
+    - "每段不超過 100 字"
+    - "結論必須可行動"
+  
+  constraints:
+    - "遵守字數限制"
+    - "不做無根據的預測"
+    - "基於數據說話"
+    - "承認數據限制"
+
+# ============================================================================
+# SECTION 7: Usage Instructions
+# ============================================================================
+usage:
+  description: |
+    此配置檔集中管理 MAMBA 儀表板中所有 OpenAI API 的 prompt 模板。
+    使用時可通過 YAML 解析器載入，並使用字串替換填入實際數據。
+  
+  example_code: |
+    # R 範例
+    library(yaml)
+    
+    # 載入 prompt 配置
+    prompts <- yaml::read_yaml("list_openai_prompt.yaml")
+    
+    # 取得特定 prompt
+    market_track_prompt <- prompts$poisson_analysis$market_track_strategy
+    
+    # 替換模板變數
+    user_content <- gsub("{rating_summary}", 
+                        jsonlite::toJSON(rating_data), 
+                        market_track_prompt$user_prompt_template)
+    
+    # 使用 prompt
+    messages <- list(
+      list(role = "system", content = market_track_prompt$system_prompt),
+      list(role = "user", content = user_content)
+    )
+    
+    # 呼叫 OpenAI API (使用配置檔指定的模型)
+    response <- openai::create_chat_completion(
+      model = market_track_prompt$model,  # 使用 YAML 指定的模型
+      messages = messages
+    )
+  
+  variable_substitution:
+    description: "使用 {variable_name} 格式標記需要替換的變數"
+    special_cases:
+      - "{system_prompts.*.content}: 引用其他系統提示"
+      - "{data}: 插入 JSON 格式的數據"
+      - "{list}: 插入條列式清單"
+  
+  model_selection_guide:
+    description: "每個 prompt 都包含 model 欄位，可指定使用的 OpenAI 模型"
+    available_models:
+      - "gpt-5.4: 目前統一使用的模型，兼顧推理能力與回應速度"
+    selection_strategy: "統一使用 gpt-5.4，所有 prompt 使用相同模型以簡化維運"
+    current_assignments:
+      all_tasks:
+        - "所有 position_analysis prompts: gpt-5.4"
+        - "所有 poisson_analysis prompts: gpt-5.4"
+        - "所有 customer_analysis prompts: gpt-5.4"
+        - "所有 vitalsigns_analysis prompts: gpt-5.4"
+        - "所有 integrated_insights prompts: gpt-5.4"

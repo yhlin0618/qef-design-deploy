@@ -1,0 +1,71 @@
+# Application Configuration Template
+# Copy this file to your app directory and rename to app_config.yaml
+
+# Basic app information
+app_info:
+  name: "Your App Name"
+  description: "Brief description of your app"
+  version: "1.0.0"
+  language: "en_US"
+
+# UI/Theme settings (optional)
+theme:
+  version: 5
+  bootswatch: cosmo
+
+# Data settings (optional)
+data:
+  raw_data_dir: "../data"
+  cache_dir: "./cache"
+  
+# API Keys and credentials (optional - use environment variables in production)
+# api_keys:
+#   openai: "your-key-here"
+
+# Deployment configuration
+deployment:
+  # Deployment target: "shinyapps" or "connect"
+  target: "connect"
+  
+  # GitHub repository info
+  github_repo: "owner/repo"
+  app_path: "path/to/app"
+  main_file: "app.R"
+  branch: "main"
+  
+  # ShinyApps.io settings (if target=shinyapps)
+  shinyapps:
+    account: "your-shinyapps-account"
+    app_name: "your-app-name"
+  
+  # Version files for apps with multiple versions
+  version_files:
+    - "app_v2.R"
+    - "app_v1.R"
+  
+  # Required files to check before deployment
+  required_files:
+    - "app.R"
+    - "manifest.json"
+    - ".gitignore"
+  
+  # Required directories
+  required_dirs:
+    - "www"
+    - "data"
+  
+  # Environment variables needed (don't include values)
+  env_vars:
+    - "DATABASE_URL"
+    - "API_KEY"
+  
+  # Special deployment instructions
+  special_instructions: |
+    Any special deployment notes or requirements for this app
+
+# Components configuration (optional)
+components:
+  # Define your app components and their settings here
+  
+# Custom app-specific settings
+# Add any other configuration your app needs 

@@ -1,0 +1,48 @@
+# NSQL Arrow Pattern Examples
+
+# Basic aggregation
+CustomerTransactions -> 
+  group(customer_id) -> 
+  aggregate(
+    total_spend = sum(purchase_amount),
+    transaction_count = count(transaction_id),
+    last_purchase_date = max(purchase_date)
+  ) -> 
+  sort(total_spend, direction=desc)
+
+# Time-based analysis
+Sales ->
+  filter(status = "completed") ->
+  group(region, month = date_trunc(order_date, "month")) ->
+  aggregate(
+    monthly_revenue = sum(revenue),
+    order_count = count(distinct order_id),
+    avg_price = average(unit_price)
+  ) ->
+  sort(region, month, direction=desc)
+
+# Join operation
+Orders ->
+  join(Customers, condition = order.customer_id = customer.id) ->
+  filter(order.date > date("2025-01-01")) ->
+  group(order.id, order.date, customer.name) ->
+  aggregate(
+    order_total = sum(order.total)
+  ) ->
+  select(
+    order_id = order.id,
+    order_date = order.date,
+    customer_name = customer.name,
+    order_total
+  )
+
+# Advanced filtering
+CustomerInteractions ->
+  filter(
+    interaction_value > threshold("high"),
+    interaction_date is after(now() minus(days(30))),
+    customer_segment in ["premium", "enterprise"]
+  ) ->
+  select(customer_id, interaction_date, interaction_type, interaction_value) ->
+  sort(interaction_date, direction=desc) ->
+  limit(100)

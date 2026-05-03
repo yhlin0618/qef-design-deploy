@@ -1,0 +1,41 @@
+# ---- secrets ----
+.env
+.env.*
+!.env.example
+
+# ---- R / RStudio ----
+.Rproj.user/
+.Rhistory
+.Rhistory*
+.RData
+*.Rproj
+*.code-workspace
+
+# ---- editor / platform ----
+.DS_Store
+Thumbs.db
+.claude/
+.cursor/
+.serena/
+.shiny-debug/
+
+# ---- renv ----
+renv/library/
+renv/staging/
+renv/cache/
+renv/python/
+
+# ---- data files ----
+*.duckdb
+*.duckdb.wal
+*.sqlite
+*.sqlite3
+*.db
+
+# ---- build artifacts ----
+_targets/
+logs/
+cache/
+output/
+validation/
+__pycache__/

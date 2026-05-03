@@ -1,0 +1,55 @@
+# Database Documentation SNSQL Examples
+# These examples show how to use the database documentation SNSQL commands
+# to generate documentation for database structures.
+
+# Simple database documentation with default settings
+summarize database "app_data.duckdb"
+
+# Specify output location and sample rows
+summarize database "app_data.duckdb" to "docs/database/app_structure.md" with sample_rows=10
+
+# Document without including data samples
+summarize database "data/raw_data.duckdb" with no_samples
+
+# Document all project databases in a specific directory
+document all databases in "docs/custom_documentation"
+
+# Complete database documentation workflow
+# This example shows a typical workflow combining multiple SNSQL commands
+
+# First, document the main application database with detailed samples
+summarize database "app_data.duckdb" to "docs/database/app_structure.md" with sample_rows=15
+
+# Next, document raw data with fewer samples
+summarize database "data/raw_data.duckdb" to "docs/database/raw_data_structure.md" with sample_rows=3
+
+# Finally, document any staging databases without samples
+summarize database "data/staging.duckdb" to "docs/database/staging_structure.md" with no_samples
+
+# Alternatively, use the all-in-one command to document all databases
+document all databases
+
+# The SNSQL version is much more concise and readable than the equivalent R code:
+#
+# ```r
+# # R code equivalent:
+# summarize_database(
+#   db_connection = "app_data.duckdb",
+#   output_file = "docs/database/app_structure.md",
+#   include_samples = TRUE,
+#   sample_rows = 15
+# )
+# 
+# summarize_database(
+#   db_connection = "data/raw_data.duckdb",
+#   output_file = "docs/database/raw_data_structure.md",
+#   include_samples = TRUE,
+#   sample_rows = 3
+# )
+# 
+# summarize_database(
+#   db_connection = "data/staging.duckdb",
+#   output_file = "docs/database/staging_structure.md",
+#   include_samples = FALSE
+# )
+# ```

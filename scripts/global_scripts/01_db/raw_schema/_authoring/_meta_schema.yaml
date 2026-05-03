@@ -1,0 +1,196 @@
+# ==============================================================================
+# _meta_schema.yaml — Schema-of-the-schemas (MP157 Layer 1 meta)
+# ==============================================================================
+# Bound by:
+#   - SO_R038  (Schema Authoring YAML Naming Convention, rule 6 — meta-schema)
+#   - MP102 v1.2  (ETL Output Standardization)
+#   - MP156    (Two-Tier Normativity, Category A — Schema Contract)
+#   - MP157    (Two-Layer YAML Authoring, Layer 1 = canonical contract)
+#   - MP159    (Glue Authoring Boundary Immutability — this meta-schema is
+#               a Layer 1 file and is itself off-limits during bridge authoring)
+#
+# Purpose:
+#   This file enumerates the allowed keys at every nesting level of
+#   `core_schemas.yaml` and `platform_extensions/*.yaml`. `_build.R` validates
+#   each authoring yaml against the matching profile here BEFORE generating
+#   DDL. Unknown keys halt the build with a Levenshtein hint pointing at the
+#   nearest legal key — catching typos like `phyiscal_realization` before
+#   they silently disappear into the build output.
+#
+# Profiles:
+#   - canonical_schema    : applies to core_schemas.yaml
+#   - platform_extension  : applies to platform_extensions/*_extensions.yaml
+#
+# Adding a new key:
+#   This file is evolved deliberately. Adding a new key requires:
+#   1. A spectra change (or task within an existing change) explicitly
+#      authorizing the new key (commit message references the change).
+#   2. IC_P002 cross-company verification: the new key applies to all 5
+#      consuming companies (or is platform-extension-scoped).
+#   3. Updating `_build.R` if the new key participates in DDL generation.
+#   4. The commit adds the key here AND uses it in the same diff (so reviewers
+#      see the registration + first usage together).
+#
+# Most recent significant edit: spectra change qef-product-master-redesign
+#   Phase 9 task 9.0d (initial registration, 2026-04-28).
+# ==============================================================================
+
+version: "1.0"
+date_created: "2026-04-28"
+
+# ---------- Profile 1: canonical_schema (core_schemas.yaml) -------------------
+
+canonical_schema:
+  applies_to: "01_db/raw_schema/_authoring/core_schemas.yaml"
+
+  # Top-level keys recognized in core_schemas.yaml (datatype names + meta)
+  top_level_keys:
+    # Datatype sections (one per canonical raw datatype)
+    - sales
+    - customers
+    - orders
+    - products
+    - reviews
+    - company_product_extension  # D11 SKU-keyed financial extension peer (added Phase 9 task 9.3, #460)
+    # Meta sections (validation rules + type mapping reference)
+    - validation_rules
+    - type_mapping
+    - bridge_mapping_notes
+
+  # Keys allowed inside a datatype section (e.g., `products: { ... }`)
+  datatype_keys:
+    - description              # Universal English description
+    - description_zh           # 繁體中文描述
+    - table_pattern            # df_{platform}_{datatype}___raw template
+    - version                  # Datatype schema version (e.g., "3.0")
+    - physical_realization     # "table" (default) or "view" — D11 thin master support
+    - view_source_pattern      # When physical_realization=view: UNION source pattern
+    - primary_key              # List of canonical field names forming the PK (D11 multi-column PK support)
+    - required_fields          # Map of canonical-required field name -> field def
+    - optional_fields          # Map of canonical-optional field name -> field def
+
+  # Keys allowed inside a field definition
+  # (under required_fields[*] or optional_fields[*])
+  field_keys:
+    - type                     # VARCHAR / INTEGER / NUMERIC / BOOLEAN / TIMESTAMP / TEXT / DATE
+    - required                 # boolean — true for required_fields, false for optional
+    - description              # English field description
+    - description_zh           # 繁體中文 field 描述
+    - aliases                  # List of alternative names (DM_R065 dedup applies)
+    - pattern                  # Regex constraint (DDL CHECK source)
+    - coercion                 # Type coercion definition (sub-keys below)
+    - fallback                 # Fallback value definition (sub-keys below)
+    - constraints              # List of additional constraint strings
+    - notes                    # Free-form documentation
+
+  # Keys allowed inside the `coercion:` sub-mapping
+  coercion_keys:
+    - from                     # List of acceptable source R types
+    - to                       # Target R/SQL type
+    - rule                     # Human-readable coercion rule (ASCII per SO_R038)
+
+  # Keys allowed inside the `fallback:` sub-mapping
+  fallback_keys:
+    - rule                     # "sentinel" | "use_value" | "derive_from"
+    - value                    # The sentinel value (UNKNOWN_<ENTITY> per SO_R038)
+    - derive                   # Derivation expression (when rule=derive_from)
+    - rationale                # Why this fallback was chosen
+
+  # Type values allowed for `type:` field
+  allowed_types:
+    - VARCHAR
+    - TEXT
+    - INTEGER
+    - NUMERIC
+    - DOUBLE
+    - BOOLEAN
+    - TIMESTAMP
+    - DATE
+    - TIME
+    - BLOB
+
+  # Fallback rule values
+  allowed_fallback_rules:
+    - sentinel                 # value: is the literal sentinel
+    - use_value                # value: is the constant to use
+    - derive_from              # derive: is the derivation expression
+
+# ---------- Profile 2: platform_extension (platform_extensions/*.yaml) --------
+
+platform_extension:
+  applies_to: "01_db/raw_schema/_authoring/platform_extensions/*_extensions.yaml"
+
+  # Top-level keys: only canonical datatype names; platform-specific fields
+  # live INSIDE these sections, never as siblings.
+  top_level_keys:
+    - sales
+    - customers
+    - orders
+    - products
+    - reviews
+    - company_product_extension  # D11 SKU-keyed financial extension peer (added Phase 9 task 9.5, #460)
+
+  # Keys allowed inside a platform-extension datatype section
+  datatype_keys:
+    - description              # Platform-specific description
+    - description_zh           # 繁體中文描述
+    - extends                  # Reference to canonical datatype this extends
+    - fields                   # Map of platform-specific field name -> field def
+    - platform_specific        # Marker section (boolean or notes) — opt-in metadata
+
+  # Keys allowed inside a platform-extension field definition
+  # (broader than canonical: extensions document source-format details that
+  # would not appear in canonical schemas)
+  field_keys:
+    - type                     # SQL type
+    - required                 # boolean
+    - description              # English description
+    - description_zh           # 繁體中文 描述
+    - aliases                  # Alternative names from source data
+    - pattern                  # Regex constraint
+    - default                  # Default value when NULL in source
+    - format                   # Source format hint (e.g., "ISO-8601 timestamp")
+    - example                  # Single example value
+    - examples                 # List of example values
+    - source                   # Source documentation note (e.g., API endpoint)
+    - primary_key              # boolean — part of platform-specific PK
+    - unique                   # boolean — uniqueness constraint
+    - privacy                  # PII classification ("pii" / "redacted" / "public")
+    - notes                    # Free-form
+
+  # Type values allowed (same as canonical)
+  allowed_types:
+    - VARCHAR
+    - TEXT
+    - INTEGER
+    - NUMERIC
+    - DOUBLE
+    - BOOLEAN
+    - TIMESTAMP
+    - DATE
+    - TIME
+    - BLOB
+
+# ---------- Validator behavior --------------------------------------------------
+
+validator:
+  # When _build.R encounters an unknown key, it emits an error of this severity
+  # and halts. There is no "warning" tier for unknown keys — typos that are
+  # silently accepted defeat the meta-schema's purpose.
+  unknown_key_severity: "error"
+
+  # Levenshtein-distance threshold for "did you mean ...?" suggestions.
+  # Distance 1-2 = suggested; distance >= 3 = no suggestion offered (the user's
+  # key is unrelated to any registered key, so guessing would mislead).
+  levenshtein_max_distance: 2
+
+  # Fields where the registered set is exhaustive (closed-vocabulary fields).
+  # Adding a new value here goes through the same change-spec discipline as
+  # adding a new key.
+  closed_vocabulary_fields:
+    - "type"
+    - "fallback.rule"
+
+  # Skip-list: keys that may appear during transition periods. Empty by
+  # default; populated only when a multi-step migration genuinely needs it.
+  transition_skip_list: []

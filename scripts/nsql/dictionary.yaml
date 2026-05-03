@@ -1,0 +1,208 @@
+# NSQL Dictionary
+# Purpose: Terminology definitions for confirmation protocol
+# Version: 2.0.0
+# Date: 2025-12-24
+
+meta:
+  version: "2.0.0"
+  purpose: "Define terms for human-AI confirmation, not code translation"
+  note: |
+    This dictionary helps AI understand user intent and present confirmations.
+    Code generation is left to the AI's general capabilities.
+
+# Structural Keywords
+# Used in confirmation format output
+structural_keywords:
+
+  transform:
+    description: "Start of a query - specifies data source"
+    confirmation_usage: "transform {table_name} to {result_name}"
+
+  to:
+    description: "Result designation"
+    confirmation_usage: "transform Sales to Summary"
+
+  as:
+    description: "Column/calculation specification"
+    confirmation_usage: "as sum(revenue) as total"
+
+  grouped_by:
+    description: "Aggregation dimensions"
+    confirmation_usage: "grouped by region, date"
+    aliases: ["group by"]
+
+  where:
+    description: "Filter conditions"
+    confirmation_usage: "where date >= '2024-01-01'"
+
+  ordered_by:
+    description: "Sort specification"
+    confirmation_usage: "ordered by revenue desc"
+    aliases: ["order by"]
+
+  limit:
+    description: "Row limit"
+    confirmation_usage: "limit 10"
+
+# Aggregate Functions
+# Common aggregations with natural language aliases
+aggregate_functions:
+
+  sum:
+    description: "Total / sum of values"
+    aliases: ["總和", "合計", "total"]
+    example: "sum(revenue)"
+
+  count:
+    description: "Count of records"
+    aliases: ["數量", "筆數", "個數", "number of"]
+    example: "count(order_id)"
+
+  average:
+    description: "Average / mean value"
+    aliases: ["平均", "均值", "avg", "mean"]
+    example: "average(price)"
+
+  max:
+    description: "Maximum value"
+    aliases: ["最大", "最高", "maximum"]
+    example: "max(score)"
+
+  min:
+    description: "Minimum value"
+    aliases: ["最小", "最低", "minimum"]
+    example: "min(price)"
+
+# Business Terms
+# Domain-specific terms with operational definitions
+business_terms:
+
+  high_value_customer:
+    term: "高價值客戶"
+    aliases: ["VIP客戶", "重要客戶", "high-value customer"]
+    definitions:
+      - name: "RFM-based"
+        description: "RFM 分數皆 ≥ 4"
+        condition: "rfm_r >= 4 AND rfm_f >= 4 AND rfm_m >= 4"
+        recommended: true
+      - name: "Revenue-based"
+        description: "年消費 > $10,000"
+        condition: "annual_revenue > 10000"
+      - name: "Percentile-based"
+        description: "消費 Top 10%"
+        condition: "revenue_percentile >= 0.9"
+
+  active_customer:
+    term: "活躍客戶"
+    aliases: ["active customer", "使用中客戶"]
+    definitions:
+      - name: "Recent purchase"
+        description: "過去90天內有消費"
+        condition: "last_purchase_date >= today() - 90"
+        recommended: true
+      - name: "Frequent buyer"
+        description: "季消費 ≥ 3 次"
+        condition: "quarterly_purchase_count >= 3"
+
+  churned_customer:
+    term: "流失客戶"
+    aliases: ["churn", "lost customer", "離開客戶"]
+    definitions:
+      - name: "Inactive period"
+        description: "超過180天未消費"
+        condition: "last_purchase_date < today() - 180"
+        recommended: true
+
+  new_customer:
+    term: "新客戶"
+    aliases: ["new customer", "首購客戶"]
+    definitions:
+      - name: "First purchase timing"
+        description: "首次購買在過去30天內"
+        condition: "first_purchase_date >= today() - 30"
+        recommended: true
+
+# Time References
+# Common time expressions and their interpretations
+time_references:
+
+  last_month:
+    term: "上個月"
+    aliases: ["last month", "前一個月"]
+    interpretations:
+      - name: "Calendar month"
+        description: "上一個完整月份"
+        example: "2024-11-01 to 2024-11-30"
+        recommended: true
+      - name: "Rolling 30 days"
+        description: "過去30天"
+        example: "today - 30 to today"
+
+  last_quarter:
+    term: "上季"
+    aliases: ["last quarter", "上一季"]
+    interpretations:
+      - name: "Calendar quarter"
+        description: "上一個完整季度 (Q1-Q4)"
+        recommended: true
+      - name: "Rolling 90 days"
+        description: "過去90天"
+
+  last_year:
+    term: "去年"
+    aliases: ["last year", "前一年"]
+    interpretations:
+      - name: "Calendar year"
+        description: "上一個完整年度"
+        recommended: true
+      - name: "Rolling 365 days"
+        description: "過去365天"
+
+  ytd:
+    term: "今年至今"
+    aliases: ["YTD", "year to date"]
+    interpretation: "今年1月1日至今天"
+
+# Natural Language Patterns
+# Common query patterns in natural language
+query_patterns:
+
+  show_by:
+    pattern: "show {metric} by {dimension}"
+    examples:
+      - input: "show sales by region"
+      - input: "看各區銷售"
+    confirmation: |
+      transform {table} to Results
+      as sum({metric}) as {metric}_total
+      grouped by {dimension}
+
+  top_n:
+    pattern: "find top {N} {dimension} by {metric}"
+    examples:
+      - input: "find top 10 products by revenue"
+      - input: "找前10名產品依營收"
+    confirmation: |
+      transform {table} to TopN
+      as {dimension}, sum({metric}) as {metric}_total
+      ordered by {metric}_total desc
+      limit {N}
+
+  compare:
+    pattern: "compare {A} vs {B} by {metric}"
+    examples:
+      - input: "compare this year vs last year by monthly sales"
+      - input: "比較今年和去年的月銷售"
+    confirmation: |
+      compare {A} vs {B}
+      measure {metric}
+
+  calculate_for:
+    pattern: "calculate {metric} for {filter}"
+    examples:
+      - input: "calculate average order value for premium customers"
+      - input: "計算VIP客戶的平均訂單金額"
+    confirmation: |
+      transform {table} to Result
+      as average({metric}) as avg_{metric}
+      where {filter_condition}

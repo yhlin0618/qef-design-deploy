@@ -1,0 +1,164 @@
+/* ========================================
+   Dynamic Filter Theme - MAMBA Enterprise
+   Following MP119: UI Block Separation Principle
+   Simplified Design - Minimal styling, respect bs4Dash defaults
+   ======================================== */
+
+/* ========================================
+   Sidebar Horizontal Line - Defined inline in R file
+   The blue separator line is added via tags$hr in union_production_test.R
+   ======================================== */
+
+/* ========================================
+   Accordion Spacing Fix - Ensure consistent spacing
+   ======================================== */
+
+/* Remove margin between accordion cards */
+#sidebar_accordion .card {
+  margin-bottom: 0 !important;  /* Remove space between cards */
+}
+
+/* Add thin separator line between Platform and Product line */
+#sidebar_accordion .card + .card {
+  border-top: 1px solid #dee2e6;  /* Add separator line between items */
+}
+
+/* Fix spacing inconsistency in accordion items */
+#sidebar_accordion .card-body {
+  padding: 12px 15px;  /* Consistent vertical and horizontal padding */
+}
+
+/* Remove extra margin from radio button groups */
+#sidebar_accordion .radio,
+#sidebar_accordion .shiny-options-group {
+  margin: 0;
+}
+
+/* Consistent spacing for each radio option */
+#sidebar_accordion .radio {
+  padding: 4px 0;  /* Small vertical padding for each option */
+}
+
+/* Remove Bootstrap's default margin on radio inputs */
+#sidebar_accordion input[type="radio"] {
+  margin-top: 0;
+  margin-right: 8px;
+}
+
+/* ========================================
+   Filter Container Base Styles
+   ======================================== */
+
+#dynamic_filter {
+  /* No border, just a colored line on top */
+  padding: 15px;
+  border: none;
+  border-top: 3px solid #007bff;  /* Blue line matching bs4Dash primary color */
+  margin-top: 10px;
+  background: transparent;
+  
+  /* Smooth transition when switching filters */
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========================================
+   Basic Spacing for Filter Elements
+   ======================================== */
+
+#dynamic_filter .form-group {
+  margin-bottom: 15px;
+}
+
+#dynamic_filter .selectize-control {
+  margin-bottom: 15px;
+}
+
+#dynamic_filter .shiny-date-range-input {
+  margin-bottom: 15px;
+}
+
+#dynamic_filter .checkbox,
+#dynamic_filter .radio {
+  margin: 10px 0;
+}
+
+#dynamic_filter .btn {
+  margin: 5px;
+}
+
+/* ========================================
+   Filter Headers - Simple underline
+   ======================================== */
+
+#dynamic_filter h4,
+#dynamic_filter .filter-header {
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #dee2e6;
+  /* Use default bs4Dash font styles */
+}
+
+/* ========================================
+   Ensure Dropdown is Readable
+   ======================================== */
+
+#dynamic_filter .selectize-dropdown-content {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+/* ========================================
+   Loading State (if needed)
+   ======================================== */
+
+#dynamic_filter.loading {
+  position: relative;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+#dynamic_filter.loading::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 30px;
+  height: 30px;
+  margin: -15px 0 0 -15px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #007bff;  /* Use bs4Dash primary color */
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ========================================
+   Responsive Design
+   ======================================== */
+
+@media (max-width: 768px) {
+  #dynamic_filter {
+    padding: 10px;
+    margin-top: 8px;
+  }
+  
+  #dynamic_filter .btn {
+    width: 100%;
+    margin: 5px 0;
+  }
+}

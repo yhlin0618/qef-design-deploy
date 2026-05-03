@@ -1,0 +1,47 @@
+# NSQL Working Context Examples
+
+# Setting working directory to establish file operation context
+setwd /data/customer_analytics/
+
+# All file operations now use this as base context
+import monthly_sales.csv to raw_data
+# Equivalent to: import /data/customer_analytics/monthly_sales.csv to raw_data
+
+# Explore files in current context
+list files
+# Lists files in /data/customer_analytics/
+
+# Setting schema context for database operations
+use schema Sales
+
+# Table references now primarily look in Sales schema
+transform Orders to OrderSummary as
+  sum(amount) as total_sales,
+  count(distinct customer_id) as customer_count
+  grouped by product_category
+# Equivalent to: transform Sales.Orders to OrderSummary...
+
+# Working with relative paths in current context
+export Results to ./reports/summary.csv
+# Exports to /data/customer_analytics/reports/summary.csv
+
+# Combined working contexts
+setwd /data/marketing/
+use schema Marketing
+
+import ./campaigns.csv to campaign_data
+# Imports /data/marketing/campaigns.csv
+
+transform campaign_data joined with Customers on campaign_id = customer_campaign to CampaignEffectiveness as
+  campaign_name,
+  count(distinct customer_id) as reach,
+  sum(conversion_value) as total_revenue,
+  sum(conversion_value) / count(distinct customer_id) as revenue_per_customer
+  grouped by campaign_id, campaign_name
+# Uses Marketing.Customers table due to schema context
+
+# Changing context
+setwd /data/finance/
+use schema Finance
+
+# Context is now completely different for subsequent operations

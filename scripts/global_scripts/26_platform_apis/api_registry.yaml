@@ -1,0 +1,180 @@
+# Platform API Registry
+# Central registry of all platform API implementations
+# Following MP094: Platform API Architecture
+# Last Updated: 2025-08-27
+
+registry_version: "1.0"
+last_updated: "2025-08-27"
+maintainer: "Platform Team"
+
+platforms:
+  cbz:
+    name: "Cyberbiz"
+    status: "active"
+    migration_status: "in_progress"
+    migration_date: "2025-08-27"
+    data_sources: 
+      - "api"
+      - "csv"
+    
+    implemented_functions:
+      - name: "fn_cbz_connect"
+        description: "Establish API connection"
+        status: "implemented"
+      - name: "fn_cbz_disconnect"
+        description: "Close API connection"
+        status: "implemented"
+      - name: "fn_cbz_get_customers"
+        description: "Retrieve customer data"
+        status: "implemented"
+      - name: "fn_cbz_get_orders"
+        description: "Retrieve order data"
+        status: "implemented"
+      - name: "fn_cbz_get_products"
+        description: "Retrieve product catalog"
+        status: "planned"
+      - name: "fn_cbz_get_inventory"
+        description: "Retrieve inventory levels"
+        status: "planned"
+    
+    test_coverage: 0
+    documentation: "README.md"
+    config_file: "cbz/api_config.yaml"
+    
+    notes: |
+      Migrated from archive/MAMBA/cyberbiz_api
+      - Removed hardcoded API tokens
+      - Added rate limiting
+      - Implemented retry logic
+      - Standardized function naming
+    
+  eby:
+    name: "eBay"
+    status: "planned"
+    migration_status: "not_started"
+    data_sources: 
+      - "api"
+    
+    implemented_functions: []
+    
+    test_coverage: 0
+    
+    notes: |
+      Existing code in:
+      - update_scripts/archive/MAMBA/001_import_ebay_dta.R
+      - update_scripts/archive/MAMBA/002_query_ebay_sales_dta.R
+      Requires OAuth2 implementation
+    
+  amz:
+    name: "Amazon"
+    status: "planned"
+    migration_status: "not_started"
+    data_sources: 
+      - "csv"
+      - "api"
+    
+    implemented_functions: []
+    
+    test_coverage: 0
+    
+    notes: |
+      Currently using CSV exports
+      API integration pending (MWS to SP-API migration)
+      Existing code in:
+      - update_scripts/archive/MAMBA/301g_import_amazon_sales_dta.r
+    
+  web:
+    name: "Official Website"
+    status: "active"
+    migration_status: "not_required"
+    data_sources: 
+      - "database"
+    
+    implemented_functions:
+      - name: "fn_web_connect_db"
+        description: "Direct database connection"
+        status: "uses_standard_DBI"
+    
+    test_coverage: 100
+    
+    notes: |
+      Uses direct database connection via DBI
+      No API required - follows R092 Universal DBI pattern
+    
+  csv:
+    name: "Generic CSV Import"
+    status: "planned"
+    migration_status: "not_started"
+    data_sources: 
+      - "csv"
+      - "xlsx"
+    
+    implemented_functions:
+      - name: "fn_csv_import_sales"
+        description: "Import sales data from CSV"
+        status: "planned"
+      - name: "fn_csv_validate_format"
+        description: "Validate CSV format"
+        status: "planned"
+      - name: "fn_csv_map_columns"
+        description: "Map CSV columns to standard schema"
+        status: "planned"
+    
+    test_coverage: 0
+    
+    notes: |
+      Generic CSV/Excel import handlers
+      Support for manual data uploads
+
+common_utilities:
+  - name: "fn_api_rate_limiter"
+    description: "Rate limiting for API calls"
+    status: "implemented"
+    file: "common/fn_api_rate_limiter.R"
+    
+  - name: "fn_api_error_handler"
+    description: "Standardized error handling with retry logic"
+    status: "implemented"
+    file: "common/fn_api_error_handler.R"
+    
+  - name: "fn_api_authenticator"
+    description: "Generic authentication helpers"
+    status: "planned"
+    file: "common/fn_api_authenticator.R"
+    
+  - name: "fn_api_cache_manager"
+    description: "Response caching for API calls"
+    status: "planned"
+    file: "common/fn_api_cache_manager.R"
+    
+  - name: "fn_platform_get_data"
+    description: "Unified data access across platforms"
+    status: "planned"
+    file: "common/fn_platform_get_data.R"
+
+validation_requirements:
+  - "All platforms must have api_config.yaml"
+  - "All platforms must implement connect/disconnect functions"
+  - "All functions must follow fn_{platform}_{action} naming"
+  - "All functions must have roxygen2 documentation"
+  - "All platforms must have tests/ subdirectory"
+  - "No hardcoded credentials allowed"
+  - "Rate limiting must be implemented for all API calls"
+
+migration_checklist:
+  - task: "Inventory existing API code"
+    status: "completed"
+  - task: "Create directory structure"
+    status: "completed"
+  - task: "Develop common utilities"
+    status: "completed"
+  - task: "Migrate Cyberbiz API"
+    status: "in_progress"
+  - task: "Update ETL scripts"
+    status: "pending"
+  - task: "Create comprehensive tests"
+    status: "pending"
+  - task: "Document all functions"
+    status: "in_progress"
+  - task: "Archive old code"
+    status: "pending"

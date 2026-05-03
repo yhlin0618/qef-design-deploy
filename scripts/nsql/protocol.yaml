@@ -1,0 +1,420 @@
+# NSQL Confirmation Protocol
+# Version: 3.1.0
+# Purpose: AI-to-Human confirmation format for eliminating ambiguity
+# Date: 2025-12-24
+
+meta:
+  version: "3.1.0"
+  name: "NSQL Confirmation Protocol"
+  description: |
+    NSQL is not an input language for humans to learn.
+    It is a structured output format for AI to confirm understanding.
+
+    Human speaks naturally -> AI confirms in NSQL -> Human approves/corrects
+
+  design_decisions:
+    - "Natural language is USER INPUT, not a confirmation format"
+    - "Pipeline is the DEFAULT format (most precise, least ambiguous)"
+    - "SQL-like is an ALTERNATIVE for users who prefer SQL style"
+
+# Core Principles
+principles:
+  - id: "P1"
+    name: "Read-Only for Humans"
+    description: "Humans only need to READ and understand, not WRITE"
+    rationale: "Eliminates learning curve while maintaining precision"
+
+  - id: "P2"
+    name: "Explicit Operation Order"
+    description: "Every operation and its sequence must be visible"
+    rationale: "Prevents hidden assumptions about execution order"
+
+  - id: "P3"
+    name: "Dynamic Confirmation Loop"
+    description: "Achieve consensus through dialogue, not perfect first-attempt parsing"
+    rationale: "Acknowledges that human language is inherently ambiguous"
+
+# Confirmation Formats
+confirmation_formats:
+
+  # ============================================================
+  # PIPELINE FORMAT (DEFAULT)
+  # Most precise, explicit operation order, least ambiguous
+  # ============================================================
+  pipeline:
+    description: "Default format for data queries - explicit operation chain"
+    default: true
+    template: |
+      我理解您要的是：
+
+      {source}
+        -> filter({conditions})
+        -> group({dimensions})
+        -> aggregate({operations})
+        -> sort({order})
+        -> limit({n})
+
+      這樣對嗎？
+
+    template_minimal: |
+      我理解您要的是：
+
+      {source} -> {operation_chain}
+
+      這樣對嗎？
+
+    components:
+      source: "Source table or dataset"
+      filter: "Row filtering conditions (optional)"
+      group: "Grouping dimensions (optional)"
+      aggregate: "Aggregation operations with named outputs"
+      sort: "Sort specification (optional)"
+      limit: "Row limit (optional)"
+
+    examples:
+      - name: "Basic aggregation"
+        input: "給我各區域的銷售總額"
+        output: |
+          Orders
+            -> group(region)
+            -> aggregate(total_sales = sum(amount))
+
+      - name: "Filtered aggregation"
+        input: "上個月已完成訂單的客戶消費排名"
+        output: |
+          Orders
+            -> filter(status = 'completed' AND date in [2024-11-01, 2024-11-30])
+            -> group(customer_id)
+            -> aggregate(total_spent = sum(amount))
+            -> sort(total_spent desc)
+
+      - name: "Complex pipeline"
+        input: "找出消費前10名的VIP客戶"
+        output: |
+          Customers
+            -> filter(tier = 'VIP')
+            -> join(Orders, on: customer_id)
+            -> group(customer_id, customer_name)
+            -> aggregate(total_spent = sum(amount), order_count = count(*))
+            -> sort(total_spent desc)
+            -> limit(10)
+
+  # ============================================================
+  # SQL-LIKE FORMAT (ALTERNATIVE)
+  # More readable for SQL-familiar users, but less explicit order
+  # ============================================================
+  sql_like:
+    description: "Alternative format for SQL-familiar users"
+    default: false
+    template: |
+      我理解您要的是：
+
+      transform {source} to {target}
+      as {operations}
+      [grouped by {dimensions}]
+      [where {conditions}]
+      [ordered by {sort}]
+      [limit {n}]
+
+      這樣對嗎？
+
+    components:
+      source: "Source table or dataset"
+      target: "Result name (can be implicit)"
+      operations: "Calculations or selections"
+      dimensions: "Grouping fields (optional)"
+      conditions: "Filter conditions (optional)"
+      sort: "Sort specification (optional)"
+      n: "Row limit (optional)"
+
+    examples:
+      - name: "Basic query"
+        input: "各區域銷售總額"
+        output: |
+          transform Orders to RegionSales
+          as sum(amount) as total_sales
+          grouped by region
+
+    note: |
+      SQL-like format has implicit operation order (WHERE before GROUP BY).
+      Use Pipeline format when operation order matters or could be ambiguous.
+
+  # ============================================================
+  # OPERATION FORMAT
+  # For data modification or system operations (CREATE, UPDATE, DELETE)
+  # ============================================================
+  operation:
+    description: "For data modification or system operations"
+    template: |
+      我將執行以下操作：
+
+      {action} on {target}
+      with {parameters}
+      [affecting {scope}]
+
+      ⚠️ 此操作將影響約 {count} 筆資料
+      [⚠️ 此操作無法復原]
+
+      確認執行嗎？
+
+    components:
+      action: "The operation to perform (CREATE, UPDATE, DELETE, INSERT, etc.)"
+      target: "The target table or resource"
+      parameters: "Parameters for the operation"
+      scope: "Scope description (optional)"
+      count: "Estimated affected records"
+
+    examples:
+      - name: "Bulk update"
+        input: "把超過半年沒購買的客戶標記為不活躍"
+        output: |
+          UPDATE on Customers
+          with status = 'inactive'
+          affecting customers where last_purchase < '2024-06-24'
+
+          ⚠️ 此操作將影響約 1,247 筆資料
+          ⚠️ 此操作無法復原
+
+          確認執行嗎？
+
+# Format Selection Guidelines
+format_selection:
+  use_pipeline:
+    - "Default for all data queries"
+    - "When operation order matters"
+    - "When there are multiple transformations"
+    - "When precision is critical"
+
+  use_sql_like:
+    - "User explicitly prefers SQL style"
+    - "Simple single-table queries"
+    - "When showing correspondence to actual SQL"
+
+  use_operation:
+    - "Any write operation (CREATE, UPDATE, DELETE)"
+    - "System modifications"
+    - "Irreversible actions"
+
+# Disambiguation Triggers
+disambiguation_triggers:
+
+  - id: "D1"
+    trigger: "Vague Time References"
+    examples:
+      - "上個月"
+      - "最近"
+      - "去年"
+      - "lately"
+      - "recently"
+    resolution: |
+      「{term}」可以有不同解釋：
+      1. {option_1} (例：2024-11-01 ~ 2024-11-30)
+      2. {option_2} (例：過去30天)
+      3. {option_3} (例：上一個完整月份)
+
+      您指的是哪一個？
+
+  - id: "D2"
+    trigger: "Undefined Business Terms"
+    examples:
+      - "高價值客戶"
+      - "活躍用戶"
+      - "忠誠客戶"
+      - "high-value customer"
+      - "active user"
+    resolution: |
+      「{term}」在系統中有幾種定義方式：
+      1. {definition_1}（推薦）
+      2. {definition_2}
+      3. 自訂條件
+
+      您想用哪一個？
+
+  - id: "D3"
+    trigger: "Polysemous Terms"
+    examples:
+      - "銷售（金額 vs 數量）"
+      - "客戶（帳號 vs 自然人）"
+      - "訂單（筆數 vs 金額）"
+    resolution: |
+      「{term}」可能指：
+      1. {meaning_1}
+      2. {meaning_2}
+
+      請確認您要的是？
+
+  - id: "D4"
+    trigger: "Implicit Aggregation"
+    examples:
+      - "各區的銷售"
+      - "每月營收"
+    resolution: |
+      您要的「{metric}」是：
+      1. 總和 (sum)
+      2. 平均 (average)
+      3. 計數 (count)
+      4. 其他
+
+      請確認？
+
+  - id: "D5"
+    trigger: "Operation Order Ambiguity"
+    examples:
+      - "篩選後加總" vs "加總後篩選"
+      - "先分組再過濾" vs "先過濾再分組"
+    resolution: |
+      操作順序會影響結果。請確認順序：
+      1. 先 {op1} 再 {op2}（推薦）
+      2. 先 {op2} 再 {op1}
+
+      您要哪一個？
+
+# Response Types
+response_types:
+
+  confirmed:
+    description: "User confirms AI understanding is correct"
+    triggers: ["對", "是", "正確", "yes", "ok", "確認"]
+    action: "Proceed with execution"
+
+  modified:
+    description: "User provides correction"
+    triggers: ["不對，應該是...", "改成...", "其實我要的是..."]
+    action: "Update confirmation and re-present"
+
+  rejected:
+    description: "User rejects interpretation entirely"
+    triggers: ["不是", "錯了", "完全不對"]
+    action: "Ask for clarification and restart"
+
+  clarified:
+    description: "User provides additional context"
+    triggers: ["還要加上...", "另外...", "補充..."]
+    action: "Incorporate new information and update"
+
+# Workflow
+workflow:
+  steps:
+    - step: 1
+      name: "Receive Natural Language"
+      description: "User expresses intent in natural language"
+
+    - step: 2
+      name: "Parse and Identify Ambiguities"
+      description: "AI analyzes for vagueness and ambiguity"
+
+    - step: 3
+      name: "Disambiguate if Needed"
+      description: "Present options for ambiguous terms"
+
+    - step: 4
+      name: "Present Confirmation"
+      description: "Show structured NSQL confirmation (Pipeline by default)"
+
+    - step: 5
+      name: "Await Response"
+      description: "User confirms, modifies, or rejects"
+
+    - step: 6
+      name: "Execute or Iterate"
+      description: "Execute if confirmed, iterate if not"
+
+# Integration with Dictionary
+dictionary_usage:
+  description: |
+    The dictionary.yaml file provides:
+    - Standard terminology mappings
+    - Business term definitions
+    - Aggregate function names
+
+    AI should use dictionary entries to:
+    - Recognize synonyms
+    - Apply default definitions
+    - Suggest operationalizations
+
+# Schema Integration
+schema_integration:
+  description: |
+    NSQL confirmation protocol requires schema awareness to:
+    - Use correct table and field names
+    - Validate field existence before confirmation
+    - Show available fields for user reference
+
+    IMPORTANT: NSQL itself does not contain schema definitions.
+    Each project should specify schema location in its own configuration
+    (e.g., CLAUDE.md or project config).
+
+  requirements:
+    - table_names: "Available tables and their aliases"
+    - field_names: "Field names, types, and aliases per table"
+    - relationships: "Table relationships for join operations"
+    - aggregation_mapping: "Common terms to aggregation functions"
+
+  workflow:
+    - step: 1
+      action: "Load schema from project-specified location"
+      note: "Location defined in project configuration, not NSQL"
+
+    - step: 2
+      action: "Map user terminology to tables/fields"
+      note: "Use aliases from schema to resolve user terms"
+
+    - step: 3
+      action: "Validate field existence"
+      note: "Ensure all fields in confirmation actually exist"
+
+    - step: 4
+      action: "Include field hints in confirmation"
+      note: "Show available fields when helpful"
+
+  schema_requirements:
+    description: |
+      A valid schema source should provide:
+      - tables: List of available tables with descriptions
+      - fields: For each table, list of fields with types and aliases
+      - relationships: Foreign key relationships between tables
+      - aggregation_mapping: Common business terms to aggregation operations
+
+  example_with_schema:
+    description: "Example of schema-aware confirmation"
+    user_input: "找評分最高的產品"
+    confirmation: |
+      根據 reviews 表，我理解您要的是：
+
+      reviews
+        -> group(product_id)
+        -> aggregate(avg_rating = mean(rating))
+        -> sort(avg_rating desc)
+        -> limit({N})
+
+      可用欄位：review_id, product_id, rating, review_date, review_text
+      （product_id 對應您說的「產品」）
+
+      這樣對嗎？
+
+# Version History
+changelog:
+  - version: "3.1.0"
+    date: "2025-12-24"
+    changes:
+      - "Added schema_integration section for schema-aware confirmations"
+      - "Schema integration is generic - no project-specific paths"
+      - "Each project specifies schema location in own configuration"
+      - "Added example of schema-aware confirmation"
+
+  - version: "3.0.0"
+    date: "2025-12-24"
+    changes:
+      - "BREAKING: Pipeline is now the default format"
+      - "BREAKING: Renamed 'query' format to 'sql_like'"
+      - "BREAKING: Removed 'comparison' format (use pipeline instead)"
+      - "Added explicit operation order as core principle (P2)"
+      - "Added D5: Operation Order Ambiguity trigger"
+      - "Added format selection guidelines"
+      - "Added examples for each format"
+
+  - version: "2.0.0"
+    date: "2025-12-24"
+    changes:
+      - "Initial protocol definition"
+      - "Repositioned NSQL as confirmation protocol"

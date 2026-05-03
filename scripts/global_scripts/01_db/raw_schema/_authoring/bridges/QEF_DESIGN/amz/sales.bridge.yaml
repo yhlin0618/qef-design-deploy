@@ -1,0 +1,276 @@
+# Bridge: QEF_DESIGN / amz / sales (PoC v1, hand-written)
+# Spectra change: glue-layer-prerawdata-bridge (issue #489 Phase 5)
+# Bound by MP102 v1.2 per MP156 Two-Tier Normativity (Category A — Schema Contract)
+#
+# This is the FIRST bridge yaml across the codebase. It is hand-written rather
+# than LLM-generated to validate the runtime contract end-to-end before
+# trusting LLM-generated bridges in production. Subsequent companies/platforms
+# will use the glue-bridge skill to produce a draft yaml; this PoC bridge
+# provides the reference shape they should match.
+#
+# Source: QEF_DESIGN/data/local_data/rawdata_QEF_DESIGN/amazon_sales/{YYYY-M}/
+#   {YYYY-MM}.xlsx — monthly Amazon Seller Central All Orders Report exports.
+# Target: rawdata.duckdb / df_amz_sales___raw (per canonical schema yaml).
+
+prerawdata_source:
+  company: "QEF_DESIGN"
+  platform: "amz"
+  source_type: "xlsx"
+  source_uri: "data/local_data/rawdata_QEF_DESIGN/amazon_sales/{YYYY-M}/{YYYY-MM}.xlsx"
+  sheet_name: null  # Default first sheet
+  schema_fingerprint:
+    algorithm: "sha256"
+    # Computed via fn_hash_prerawdata_schema() against the FULL 2024-01.xlsx
+    # (8,492 rows).
+    #
+    # IMPORTANT (lesson from PoC): the fingerprint MUST be computed against
+    # the same row-count / column-type signature that the runtime will see.
+    # readxl's type inference depends on row count — its default `guess_max`
+    # is 1000 rows, so sparse columns (e.g., gift-wrap-price, gift-wrap-tax
+    # in QEF amz data) flip from `logical` to `numeric` when later rows have
+    # non-NA decimal values. Always fingerprint with `read_excel(file)`
+    # (full file), not a truncated sample.
+    value: "6f4d53e1fd0ce2f88e718b1dd87ccb5a965151dcf7854b7a72271c8632abef73"
+    fingerprinted_against: "amazon_sales/2024-1/2024-01.xlsx (full read, 8492 rows)"
+    fingerprinted_at: "2026-04-28T00:00:00Z"
+
+canonical_target:
+  datatype: "sales"
+  platform: "amz"
+  table: "df_amz_sales___raw"
+  schema_yaml_path: "01_db/raw_schema/_authoring/core_schemas.yaml"
+  platform_extension_yaml_path: "01_db/raw_schema/_authoring/platform_extensions/amz_extensions.yaml"
+
+pre_filter:
+  # Cancelled orders are not sales — they have quantity=0 and NA prices,
+  # which violate the sales schema's required-field constraints. Amazon's
+  # All Orders Report includes them as a side-effect; the canonical
+  # `sales` datatype is for completed transactions only. Cancelled orders
+  # belong in `df_amz_orders___raw` with `order_status = "Cancelled"`.
+  # (A separate orders bridge yaml will pick those up.)
+  - column: "order-status"
+    exclude_values:
+      - "Cancelled"
+      - "Pending"
+
+column_mapping:
+  # ---------- Core fields (from core_schemas.yaml#sales.required_fields) ----------
+
+  order_id:
+    from_column: "amazon-order-id"
+    coercion: "as.character + trimws"
+
+  customer_id:
+    # Amazon Seller Central All Orders Report does NOT include buyer email
+    # by default (PII redaction policy). We use amazon-order-id as the
+    # customer identifier surrogate at raw layer; downstream DRV layer
+    # resolves to true customer identity via reviews/customer-merchant
+    # mapping.
+    from_column: "amazon-order-id"
+    coercion: "as.character + trimws"
+    notes: |
+      Amazon's All Orders Report does not expose buyer email. order_id is
+      used as a stable per-purchase customer surrogate; identity dedup
+      happens at DRV layer (D01 customer DNA). This is consistent with
+      QEF_DESIGN's pre-glue ETL behavior — see
+      shared/global_scripts/05_etl_utils/amz/205g_process_amazon_sales.R.
+
+  product_id:
+    from_column: "asin"
+    coercion: "as.character + trimws + toupper"
+
+  order_date:
+    from_column: "purchase-date"
+    coercion: "format(., '%Y-%m-%d') from POSIXct"
+
+  quantity:
+    from_column: "quantity"
+    coercion: "as.integer"
+
+  unit_price:
+    from_column: "item-price"
+    coercion: "as.numeric"
+    notes: |
+      Amazon's item-price is the per-unit gross price. total_amount below
+      is derived from quantity * unit_price since the source export does
+      not provide a separate line subtotal.
+
+  total_amount:
+    # Source export lacks an explicit line subtotal. The schema's
+    # `derive_from` rule (unit_price * quantity) handles this — we
+    # delegate to schema fallback by setting apply_fallback: true.
+    apply_fallback: true
+    notes: |
+      No source column. Schema fallback rule for total_amount is
+      "unit_price * quantity when both present; else sentinel 0".
+
+  platform_id:
+    apply_fallback: true
+    notes: "Schema fallback rule: derive from canonical_target.platform = 'amz'."
+
+  import_timestamp:
+    apply_fallback: true
+    notes: "Schema fallback rule: Sys.time() at INSERT time."
+
+  import_source:
+    # Static value; not from prerawdata
+    apply_fallback: true
+    notes: "Schema fallback rule: 'unknown' sentinel; runtime sets to 'glue_bridge_QEF_DESIGN_amz_sales' if needed."
+
+  # ---------- Platform extensions (from amz_extensions.yaml#sales.fields) ----------
+
+  amz_marketplace_id:
+    # Amazon Seller Central All Orders Report does not include marketplace_id
+    # column directly; it is a constant for QEF_DESIGN (US marketplace only).
+    use_value: "ATVPDKIKX0DER"
+    notes: |
+      QEF_DESIGN sells exclusively in amazon.com (US). Hardcoded literal
+      via the bridge's use_value mechanism (per-company constants belong
+      in the bridge yaml, not the schema yaml). If QEF expands to other
+      Amazon marketplaces, regenerate this bridge with a from_column
+      mapping or per-source bridge per marketplace.
+
+  amz_fulfillment_channel:
+    from_column: "fulfillment-channel"
+    coercion: "as.character + toupper"
+    value_map:
+      # Amazon's All Orders Report uses long-form names ("Amazon" /
+      # "Merchant") while the canonical schema (per Amazon SP-API docs)
+      # uses short codes "AFN" / "MFN". Bridge does the translation.
+      #
+      # DM_R065 rule 3 compliance: keys are post-coercion (uppercase) only.
+      # Source values "Amazon" / "Merchant" -> coercion `toupper` ->
+      # "AMAZON" / "MERCHANT" -> value_map -> "AFN" / "MFN".
+      "AMAZON": "AFN"
+      "MERCHANT": "MFN"
+      "AFN": "AFN"
+      "MFN": "MFN"
+    notes: |
+      Source format: "Amazon" or "Merchant" (mixed case in raw data).
+      Canonical pattern: ^(AFN|MFN)$.
+      Value map keys are post-coercion (toupper) per DM_R065 rule 3 — no
+      case-variant brute force. Identity mappings ("AFN"->"AFN" / "MFN"->
+      "MFN") preserved for sources that already use canonical short codes.
+
+  amz_amazon_order_id:
+    from_column: "amazon-order-id"
+    coercion: "as.character + trimws"
+    notes: |
+      Same source column as order_id but kept as a separate column for
+      explicit Amazon-specific lineage. Matches pattern
+      ^[0-9]{3}-[0-9]{7}-[0-9]{7}$.
+
+  amz_seller_sku:
+    from_column: "sku"
+    coercion: "as.character + trimws"
+
+  amz_shipping_service_level:
+    from_column: "ship-service-level"
+    coercion: "as.character + trimws"
+
+  amz_fba_status:
+    # Not in All Orders Report. FBA status comes from FBA Inventory API
+    # which is a separate prerawdata source. Out of scope for this PoC.
+    apply_fallback: true
+    notes: |
+      Out of source scope. Future enhancement: separate bridge for
+      FBA Inventory API would populate this field via a join in DRV layer.
+
+  amz_promotion_ids:
+    from_column: "promotion-ids"
+    coercion: "as.character"
+    notes: |
+      Source column is logical (all NA) in 2024 monthly files because
+      QEF_DESIGN doesn't run Amazon promotions. Coerced to empty-string
+      sentinel via canonical schema's fallback for optional VARCHAR.
+
+  amz_is_business_order:
+    from_column: "is-business-order"
+    coercion: "as.logical"
+
+  amz_is_prime:
+    # Not in All Orders Report v2 by default (it's in fulfilled-shipments
+    # report). Out of scope for this PoC.
+    apply_fallback: true
+    notes: "Out of source scope; FBA-fulfilled rows are implicitly Prime, but explicit flag requires fulfilled-shipments report."
+
+ignored_columns:
+  # Prerawdata columns intentionally not mapped:
+  #   - merchant-order-id: QEF_DESIGN does not use this (Amazon-only marketplace)
+  #   - last-updated-date: only purchase-date is canonical for our analytics
+  #   - sales-channel / order-channel / url: low-information columns in QEF data
+  #   - product-name: stored in df_amz_products___raw, not df_amz_sales___raw
+  #   - number-of-items / item-status: redundant with quantity / order-status
+  #   - tax-collection-* / *-tax / *-price (other than item-price): all logical
+  #     (NA) in QEF data; tax handling is QEF's CPA scope, not ours
+  #   - gift-wrap-* / *-promotion-discount: not used by QEF
+  #   - address-type / ship-* (other than ship-service-level): geo data lives
+  #     in customer profile DRV, not raw sales
+  #   - cpf / item-extensions-data: not relevant to our schema
+  #   - purchase-order-number / price-designation: B2B fields, QEF is B2C
+  #   - signature-confirmation-recommended: shipping operations metadata
+  #   - buyer-identification-number / buyer-identification-type: PII-redacted
+  - "merchant-order-id"
+  - "last-updated-date"
+  - "order-status"  # captured separately in df_amz_orders___raw (orders datatype)
+  - "sales-channel"
+  - "order-channel"
+  - "url"
+  - "product-name"
+  - "number-of-items"
+  - "item-status"
+  - "tax-collection-model"
+  - "tax-collection-responsible-party"
+  - "currency"
+  - "item-tax"
+  - "shipping-price"
+  - "shipping-tax"
+  - "gift-wrap-price"
+  - "gift-wrap-tax"
+  - "item-promotion-discount"
+  - "ship-promotion-discount"
+  - "address-type"
+  - "ship-city"
+  - "ship-state"
+  - "ship-postal-code"
+  - "ship-country"
+  - "cpf"
+  - "item-extensions-data"
+  - "purchase-order-number"
+  - "price-designation"
+  - "signature-confirmation-recommended"
+  - "buyer-identification-number"
+  - "buyer-identification-type"
+
+generated_at: "2026-04-28T00:00:00Z"
+generated_by: "hand-written (PoC v1)"
+reviewed_by: "che (kiki830621)"
+review_notes: |
+  PoC bridge for QEF_DESIGN amazon_sales source. Notes for human reviewers
+  of subsequent bridges:
+
+  1. Buyer email not available — Amazon redacts in All Orders Report.
+     order_id is the customer surrogate at raw layer; identity dedup
+     happens at DRV layer.
+
+  2. amz_marketplace_id is hardcoded "ATVPDKIKX0DER" (US) since QEF only
+     sells in amazon.com. The bridge sets apply_fallback: true and the
+     Phase 5 runtime adds a post-mapping override (TODO: add this hook
+     to fn_glue_bridge if the pattern recurs across companies; currently
+     handled by a 1-line dbExecute UPDATE in the QEF runner script).
+
+  3. total_amount is derived (quantity * unit_price) since the source
+     report has no line subtotal. This is consistent with how the
+     pre-glue ETL behaves — see 205g_process_amazon_sales.R.
+
+  4. 30 columns ignored by design — see comments in `ignored_columns`.
+
+  5. Drift will fire if Amazon changes the All Orders Report schema
+     (adds/removes/renames columns). The 41-column fingerprint is sensitive
+     to all such changes. When drift fires, regenerate this bridge via
+     /glue-bridge skill against a fresh 2024-12.xlsx (or later) sample.
+
+  6. PoC verification done against 2024-1/2024-01.xlsx representative
+     sample. Phase 5 Task 5.2 will compare output with existing ETL 0IM
+     output for the same month and document any row-count or schema
+     deltas in shared/handbook/glue-bridge-onboarding.md.

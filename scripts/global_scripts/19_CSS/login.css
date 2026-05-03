@@ -1,0 +1,480 @@
+/*
+ * Login Page Styles - Modern Minimal Design
+ * For AI MarTech Sandbox Apps
+ * Version: 1.1 - Portal Color Scheme
+ * Last Updated: 2025-01-20
+ */
+
+/* ========================================
+   CSS Variables - Design Tokens
+   ======================================== */
+:root {
+  /* Color Palette - Portal Theme (深藍灰 + 青綠) */
+  --login-bg-primary: #f8f9fa;
+  --login-bg-secondary: #ffffff;
+  --login-text-primary: #2C3E50;
+  --login-text-secondary: #6c757d;
+  --login-text-muted: #95a5a6;
+  --login-accent: #2C3E50;
+  --login-accent-hover: #1a252f;
+  --login-accent-light: #34495e;
+  --login-border: #e9ecef;
+  --login-border-focus: #2C3E50;
+  --login-error: #E74C3C;
+  --login-success: #18BC9C;
+  --login-warning: #F39C12;
+  --login-info: #3498db;
+
+  /* Typography - Using DM Sans for modern feel */
+  --login-font-display: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --login-font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Spacing */
+  --login-spacing-xs: 0.5rem;
+  --login-spacing-sm: 0.75rem;
+  --login-spacing-md: 1rem;
+  --login-spacing-lg: 1.5rem;
+  --login-spacing-xl: 2rem;
+  --login-spacing-2xl: 3rem;
+
+  /* Borders & Shadows - Portal style */
+  --login-radius-sm: 8px;
+  --login-radius-md: 12px;
+  --login-radius-lg: 16px;
+  --login-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --login-shadow-md: 0 2px 10px rgba(0, 0, 0, 0.1);
+  --login-shadow-lg: 0 4px 15px rgba(0, 0, 0, 0.12);
+  --login-shadow-xl: 0 8px 25px rgba(0, 0, 0, 0.15);
+
+  /* Transitions */
+  --login-transition-fast: 150ms ease;
+  --login-transition-base: 250ms ease;
+  --login-transition-slow: 350ms ease;
+}
+
+/* ========================================
+   Google Fonts Import
+   ======================================== */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap');
+
+/* ========================================
+   Login Page Background
+   ======================================== */
+.login-page-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
+  padding: var(--login-spacing-lg);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle background pattern - Portal style */
+.login-page-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(44, 62, 80, 0.03) 0%, transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(24, 188, 156, 0.03) 0%, transparent 40%);
+  pointer-events: none;
+}
+
+/* ========================================
+   Login Card Container
+   ======================================== */
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--login-bg-secondary);
+  border-radius: var(--login-radius-lg);
+  box-shadow: var(--login-shadow-xl);
+  padding: var(--login-spacing-2xl);
+  position: relative;
+  z-index: 1;
+  animation: loginCardEnter 0.6s var(--login-transition-slow) both;
+}
+
+@keyframes loginCardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========================================
+   Logo Section
+   ======================================== */
+.login-logo-container {
+  text-align: center;
+  margin-bottom: var(--login-spacing-xl);
+  animation: logoEnter 0.5s var(--login-transition-base) 0.2s both;
+}
+
+@keyframes logoEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.login-logo-container img {
+  height: 100px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.08));
+  transition: transform var(--login-transition-base);
+}
+
+.login-logo-container img:hover {
+  transform: scale(1.02);
+}
+
+/* ========================================
+   Title Section
+   ======================================== */
+.login-title {
+  font-family: var(--login-font-display);
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--login-text-primary);
+  text-align: center;
+  margin-bottom: var(--login-spacing-xs);
+  letter-spacing: -0.025em;
+}
+
+.login-subtitle {
+  font-family: var(--login-font-body);
+  font-size: 0.9375rem;
+  color: var(--login-text-secondary);
+  text-align: center;
+  margin-bottom: var(--login-spacing-xl);
+  font-weight: 400;
+}
+
+/* ========================================
+   Form Elements
+   ======================================== */
+.login-form-group {
+  margin-bottom: var(--login-spacing-lg);
+  animation: formGroupEnter 0.4s var(--login-transition-base) both;
+}
+
+.login-form-group:nth-child(1) { animation-delay: 0.3s; }
+.login-form-group:nth-child(2) { animation-delay: 0.4s; }
+.login-form-group:nth-child(3) { animation-delay: 0.5s; }
+
+@keyframes formGroupEnter {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.login-label {
+  display: block;
+  font-family: var(--login-font-body);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--login-text-primary);
+  margin-bottom: var(--login-spacing-xs);
+  letter-spacing: 0.01em;
+}
+
+/* ========================================
+   Input Fields
+   ======================================== */
+.login-input,
+.login-card .form-control,
+.login-card input[type="text"],
+.login-card input[type="password"] {
+  width: 100%;
+  padding: var(--login-spacing-sm) var(--login-spacing-md);
+  font-family: var(--login-font-body);
+  font-size: 0.9375rem;
+  color: var(--login-text-primary);
+  background: var(--login-bg-secondary);
+  border: 1.5px solid var(--login-border);
+  border-radius: var(--login-radius-sm);
+  outline: none;
+  transition:
+    border-color var(--login-transition-fast),
+    box-shadow var(--login-transition-fast),
+    background-color var(--login-transition-fast);
+}
+
+.login-input::placeholder,
+.login-card .form-control::placeholder {
+  color: var(--login-text-muted);
+}
+
+.login-input:hover,
+.login-card .form-control:hover {
+  border-color: var(--login-border-focus);
+}
+
+.login-input:focus,
+.login-card .form-control:focus {
+  border-color: var(--login-accent);
+  box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.12);
+  background: var(--login-bg-secondary);
+}
+
+/* ========================================
+   Select Dropdown (Language Selector)
+   ======================================== */
+.login-select,
+.login-card select,
+.login-card .selectize-input {
+  width: 100%;
+  padding: var(--login-spacing-sm) var(--login-spacing-md);
+  font-family: var(--login-font-body);
+  font-size: 0.875rem;
+  color: var(--login-text-secondary);
+  background: var(--login-bg-primary);
+  border: 1.5px solid var(--login-border);
+  border-radius: var(--login-radius-sm);
+  cursor: pointer;
+  transition: all var(--login-transition-fast);
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236c757d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 40px;
+}
+
+.login-select:hover,
+.login-card select:hover {
+  border-color: var(--login-border-focus);
+  background-color: var(--login-bg-secondary);
+}
+
+.login-select:focus,
+.login-card select:focus {
+  outline: none;
+  border-color: var(--login-accent);
+  box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.12);
+}
+
+/* ========================================
+   Login Button
+   ======================================== */
+.login-button,
+.login-card .btn-primary,
+.login-card .action-button {
+  width: 100%;
+  padding: var(--login-spacing-sm) var(--login-spacing-lg);
+  font-family: var(--login-font-body);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: #ffffff;
+  background: var(--login-accent);
+  border: none;
+  border-radius: var(--login-radius-sm);
+  cursor: pointer;
+  transition: all var(--login-transition-base);
+  position: relative;
+  overflow: hidden;
+  letter-spacing: 0.01em;
+}
+
+.login-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+  opacity: 0;
+  transition: opacity var(--login-transition-fast);
+}
+
+.login-button:hover,
+.login-card .btn-primary:hover {
+  background: var(--login-accent-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--login-shadow-md);
+}
+
+.login-button:hover::before {
+  opacity: 1;
+}
+
+.login-button:active,
+.login-card .btn-primary:active {
+  transform: translateY(0);
+  box-shadow: var(--login-shadow-sm);
+}
+
+.login-button:disabled {
+  background: var(--login-text-muted);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ========================================
+   Alert Messages
+   ======================================== */
+.login-alert,
+.login-card .alert {
+  padding: var(--login-spacing-sm) var(--login-spacing-md);
+  border-radius: var(--login-radius-sm);
+  font-family: var(--login-font-body);
+  font-size: 0.875rem;
+  margin-bottom: var(--login-spacing-md);
+  display: flex;
+  align-items: center;
+  gap: var(--login-spacing-xs);
+  animation: alertEnter 0.3s var(--login-transition-base) both;
+}
+
+@keyframes alertEnter {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.login-alert-error,
+.login-card .alert-danger,
+.login-card .alert-warning {
+  background: rgba(220, 38, 38, 0.08);
+  color: var(--login-error);
+  border: 1px solid rgba(220, 38, 38, 0.15);
+}
+
+.login-alert-success,
+.login-card .alert-success {
+  background: rgba(5, 150, 105, 0.08);
+  color: var(--login-success);
+  border: 1px solid rgba(5, 150, 105, 0.15);
+}
+
+.login-alert-info,
+.login-card .alert-info {
+  background: rgba(15, 23, 42, 0.05);
+  color: var(--login-text-secondary);
+  border: 1px solid rgba(15, 23, 42, 0.1);
+}
+
+/* ========================================
+   bs4Dash Card Override
+   ======================================== */
+.login-wrapper .card,
+.login-wrapper .bs4Card {
+  border: none !important;
+  box-shadow: var(--login-shadow-xl) !important;
+  border-radius: var(--login-radius-lg) !important;
+  background: var(--login-bg-secondary) !important;
+}
+
+.login-wrapper .card-header {
+  background: transparent !important;
+  border-bottom: none !important;
+  padding: var(--login-spacing-xl) var(--login-spacing-2xl) 0 !important;
+}
+
+.login-wrapper .card-title {
+  font-family: var(--login-font-display) !important;
+  font-size: 1.5rem !important;
+  font-weight: 600 !important;
+  color: var(--login-text-primary) !important;
+  text-align: center !important;
+  letter-spacing: -0.025em !important;
+}
+
+.login-wrapper .card-body {
+  padding: var(--login-spacing-lg) var(--login-spacing-2xl) var(--login-spacing-2xl) !important;
+}
+
+/* Override bs4Dash default gradient background */
+.login-gradient {
+  background: var(--login-bg-primary) !important;
+  min-height: 100vh;
+  padding: var(--login-spacing-lg);
+}
+
+/* ========================================
+   Shiny Input Overrides
+   ======================================== */
+.login-wrapper .shiny-input-container {
+  margin-bottom: var(--login-spacing-lg);
+}
+
+.login-wrapper .control-label {
+  font-family: var(--login-font-body);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--login-text-primary);
+  margin-bottom: var(--login-spacing-xs);
+}
+
+.login-wrapper .form-group {
+  margin-bottom: var(--login-spacing-lg);
+}
+
+/* ========================================
+   Responsive Design
+   ======================================== */
+@media (max-width: 480px) {
+  .login-page-wrapper {
+    padding: var(--login-spacing-md);
+  }
+
+  .login-card,
+  .login-wrapper .card-body {
+    padding: var(--login-spacing-xl) !important;
+  }
+
+  .login-title {
+    font-size: 1.5rem;
+  }
+
+  .login-logo-container img {
+    height: 60px;
+  }
+}
+
+/* ========================================
+   Dark Mode Support (Future)
+   ======================================== */
+@media (prefers-color-scheme: dark) {
+  /* Dark mode styles can be added here */
+}
+
+/* ========================================
+   Print Styles
+   ======================================== */
+@media print {
+  .login-page-wrapper {
+    background: white;
+  }
+
+  .login-card {
+    box-shadow: none;
+    border: 1px solid #e5e7eb;
+  }
+}

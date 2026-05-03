@@ -1,0 +1,48 @@
+# db_paths.yaml - Database Path Definitions
+# All paths are relative to APP_DIR (project root)
+# Loaded by sc_Rprofile.R via fn_load_app_config.R
+#
+# Usage in R:
+#   db_path_list <- load_db_paths()  # Returns list with full paths
+#   con <- dbConnectDuckdb(db_path_list$app_data)
+
+# ETL 6-Layer Architecture Databases
+# Following DM_R028: ETL Data Type Separation
+
+databases:
+  # Layer 5: Application Data (5NM - Normalized/Named)
+  app_data: data/app_data/app_data.duckdb
+
+  # Layer 0: Raw Data (0IM - Import)
+  raw_data: data/local_data/raw_data.duckdb
+
+  # Layer 1: Staged Data (1ST - Staging)
+  staged_data: data/local_data/staged_data.duckdb
+
+  # Layer 2: Transformed Data (2TR - Transform)
+  transformed_data: data/local_data/transformed_data.duckdb
+
+  # Layer 3: Processed Data (3PR - Processing)
+  processed_data: data/local_data/processed_data.duckdb
+
+  # Layer 4: Cleansed Data (4CL - Cleansing)
+  cleansed_data: data/local_data/cleansed_data.duckdb
+
+  # Metadata
+  meta_data: data/local_data/meta_data.duckdb
+
+# Domain-Specific Databases
+# SCD Type classification for change frequency
+domain:
+  # SCD Type 1: Slowly changing (rarely updated)
+  comment_property_rating: data/local_data/scd_type1/comment_property_rating.duckdb
+  # #435: Optional AI-rating scratch DB. New companies may not have run the
+  # AI rating pipeline yet (it needs OpenAI API + cost); autoinit must not
+  # fail-fast on first bootstrap. Any target that actually consumes this
+  # should fail downstream with a clear error at dbConnect time.
+  comment_property_rating_temp:
+    path: data/local_data/scd_type1/comment_property_rating_temp.duckdb
+    required: false
+
+  # SCD Type 2: More frequently changing
+  comment_property_rating_results: data/local_data/scd_type2/comment_property_rating_results.duckdb

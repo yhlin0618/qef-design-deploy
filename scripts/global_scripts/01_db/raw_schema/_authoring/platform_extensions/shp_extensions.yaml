@@ -1,0 +1,364 @@
+# ==============================================================================
+# shp_extensions.yaml  -  shp Platform Extension (MP157 Layer 1)
+# ==============================================================================
+# Bound by:
+#   - MP102 v1.2  (ETL Output Standardization, MP156 Tier-2 Schema Contract)
+#   - MP156       (Two-Tier Normativity, Category A - Schema Contract binding)
+#   - MP157       (Two-Layer YAML Authoring, Layer 1 platform extension)
+#   - MP158       (Glue-Driven Raw Layer Extensibility, axis 2 Step 1 target)
+#   - MP159       (Glue Authoring Boundary Immutability - immutable during bridge authoring)
+#   - SO_R038     (Schema Authoring YAML Naming Convention)
+#
+# Most recent significant edit: spectra change qef-product-master-redesign
+#   Phase 9 task 9.0e (Layer 1 binding header, 2026-04-28).
+#
+# Change discipline (same as core_schemas.yaml):
+#   - IC_P002 cross-company verification + Verified: trailer required.
+#   - Edits during a /glue-bridge skill flow are forbidden (MP159).
+#   - Adding a new field-level key requires updating _meta_schema.yaml.
+# ==============================================================================
+
+# Shopify Platform Extensions
+# Following MP102 (v1.2): ETL Output Standardization Principle
+# Bound by MP102 per MP156 Two-Tier Normativity (Category A — Schema Contract)
+# Platform ID: shp
+# Created: 2026-04-27 (spectra change `glue-layer-prerawdata-bridge`, #489 Phase 2)
+#
+# These fields extend the core schemas for Shopify-specific data.
+# All extension fields MUST use the `shp_` prefix.
+#
+# Reference data sources:
+#   - Shopify Admin API (REST + GraphQL)
+#   - Shopify Reports CSV exports
+#   - Shopify Partner / App Store webhooks
+
+# =============================================================================
+# SALES — Shopify-specific sales transaction fields
+# =============================================================================
+sales:
+  description: "Shopify-specific sales transaction fields"
+  description_zh: "Shopify 平台專屬的銷售交易欄位"
+  extends: "core_sales_v2"
+  fields:
+    shp_shop_domain:
+      type: VARCHAR
+      required: true
+      description: "Shopify store myshopify.com domain (e.g., my-store.myshopify.com)"
+      description_zh: "Shopify 店家 myshopify.com 網域(如 my-store.myshopify.com)"
+      aliases:
+        - "shop_domain"
+        - "shop"
+        - "myshopify_domain"
+      source: "Shopify Admin API Shop.myshopify_domain"
+      pattern: "^[a-z0-9-]+\\.myshopify\\.com$"
+
+    shp_order_number:
+      type: VARCHAR
+      required: false
+      description: "Human-readable order number (e.g., #1001); distinct from order_id which is the GID"
+      description_zh: "易讀訂單號(如 #1001);與 order_id(GID)不同"
+      aliases:
+        - "order_number"
+        - "Order Number"
+        - "name"
+      source: "Shopify Admin API Order.name"
+
+    shp_financial_status:
+      type: VARCHAR
+      required: false
+      description: "Order payment status (pending, paid, partially_paid, refunded, voided, partially_refunded)"
+      description_zh: "訂單付款狀態(pending、paid、partially_paid、refunded、voided、partially_refunded)"
+      aliases:
+        - "financial_status"
+        - "Financial Status"
+      source: "Shopify Admin API Order.financial_status"
+      examples: ["pending", "paid", "partially_paid", "refunded", "voided", "partially_refunded"]
+
+    shp_fulfillment_status:
+      type: VARCHAR
+      required: false
+      description: "Fulfillment status (fulfilled, partial, unfulfilled, restocked)"
+      description_zh: "履約狀態(fulfilled、partial、unfulfilled、restocked)"
+      aliases:
+        - "fulfillment_status"
+        - "Fulfillment Status"
+      source: "Shopify Admin API Order.fulfillment_status"
+      examples: ["fulfilled", "partial", "unfulfilled", "restocked"]
+
+    shp_currency:
+      type: VARCHAR
+      required: true
+      description: "ISO 4217 currency code (USD, TWD, EUR, JPY, etc.)"
+      description_zh: "ISO 4217 幣別代碼(USD、TWD、EUR、JPY 等)"
+      aliases:
+        - "currency"
+        - "Currency"
+        - "presentment_currency"
+      source: "Shopify Admin API Order.currency"
+      pattern: "^[A-Z]{3}$"
+
+    shp_landing_site:
+      type: TEXT
+      required: false
+      description: "First page (URL path) the customer landed on for this order"
+      description_zh: "顧客本次訂單最初登陸的頁面(URL path)"
+      aliases:
+        - "landing_site"
+        - "Landing Site"
+      source: "Shopify Admin API Order.landing_site"
+
+    shp_referring_site:
+      type: TEXT
+      required: false
+      description: "Referrer URL that led to the conversion"
+      description_zh: "促成轉換的轉介來源 URL"
+      aliases:
+        - "referring_site"
+        - "Referring Site"
+      source: "Shopify Admin API Order.referring_site"
+
+    shp_source_name:
+      type: VARCHAR
+      required: false
+      description: "Sales channel source (web, pos, shopify_draft_order, mobile_app, instagram, etc.)"
+      description_zh: "銷售管道來源(web、pos、shopify_draft_order、mobile_app、instagram 等)"
+      aliases:
+        - "source_name"
+        - "Source"
+      source: "Shopify Admin API Order.source_name"
+      examples: ["web", "pos", "shopify_draft_order", "mobile_app", "instagram"]
+
+    shp_tags:
+      type: TEXT
+      required: false
+      description: "Order tags (comma-separated)"
+      description_zh: "訂單標籤(逗號分隔)"
+      aliases:
+        - "tags"
+        - "Tags"
+        - "Order Tags"
+      source: "Shopify Admin API Order.tags"
+      format: "Comma-separated list"
+
+    shp_discount_codes:
+      type: TEXT
+      required: false
+      description: "Applied discount codes (JSON array)"
+      description_zh: "套用的折扣碼(JSON 陣列)"
+      aliases:
+        - "discount_codes"
+        - "Discount Codes"
+      source: "Shopify Admin API Order.discount_codes"
+      format: "JSON array"
+
+# =============================================================================
+# CUSTOMERS — Shopify-specific customer fields
+# =============================================================================
+customers:
+  description: "Shopify-specific customer fields"
+  description_zh: "Shopify 平台專屬的顧客欄位"
+  extends: "core_customers_v2"
+  fields:
+    shp_accepts_marketing:
+      type: BOOLEAN
+      required: false
+      description: "Whether the customer consents to marketing emails"
+      description_zh: "顧客是否同意接收行銷郵件"
+      aliases:
+        - "accepts_marketing"
+        - "Accepts Marketing"
+      source: "Shopify Admin API Customer.accepts_marketing"
+
+    shp_orders_count:
+      type: INTEGER
+      required: false
+      description: "Lifetime order count"
+      description_zh: "累計訂單數"
+      aliases:
+        - "orders_count"
+        - "Orders Count"
+      source: "Shopify Admin API Customer.orders_count"
+
+    shp_total_spent:
+      type: NUMERIC
+      required: false
+      description: "Lifetime spend across all orders"
+      description_zh: "累計消費金額"
+      aliases:
+        - "total_spent"
+        - "Total Spent"
+      source: "Shopify Admin API Customer.total_spent"
+
+    shp_state:
+      type: VARCHAR
+      required: false
+      description: "Customer account state (enabled, disabled, invited, declined)"
+      description_zh: "顧客帳號狀態(enabled、disabled、invited、declined)"
+      aliases:
+        - "state"
+        - "State"
+      source: "Shopify Admin API Customer.state"
+      examples: ["enabled", "disabled", "invited", "declined"]
+
+    shp_tags:
+      type: TEXT
+      required: false
+      description: "Customer tags (comma-separated)"
+      description_zh: "顧客標籤(逗號分隔)"
+      aliases:
+        - "tags"
+        - "Tags"
+        - "Customer Tags"
+      source: "Shopify Admin API Customer.tags"
+      format: "Comma-separated list"
+
+    shp_default_address_country:
+      type: VARCHAR
+      required: false
+      description: "Country code of the customer's default address (ISO 3166-1 alpha-2)"
+      description_zh: "顧客預設地址的國家代碼(ISO 3166-1 alpha-2)"
+      aliases:
+        - "country"
+        - "default_address.country_code"
+      source: "Shopify Admin API Customer.default_address.country_code"
+      pattern: "^[A-Z]{2}$"
+
+# =============================================================================
+# PRODUCTS — Shopify-specific product catalog fields
+# =============================================================================
+products:
+  description: "Shopify-specific product catalog fields"
+  description_zh: "Shopify 平台專屬的產品目錄欄位"
+  extends: "core_products_v2"
+  fields:
+    shp_product_handle:
+      type: VARCHAR
+      required: false
+      description: "Shopify URL handle / slug (e.g., 'classic-tshirt' from /products/classic-tshirt)"
+      description_zh: "Shopify URL 句柄 / slug(如 /products/classic-tshirt 中的 classic-tshirt)"
+      aliases:
+        - "handle"
+        - "Handle"
+        - "product_handle"
+      source: "Shopify Admin API Product.handle"
+      pattern: "^[a-z0-9-]+$"
+
+    shp_product_type:
+      type: VARCHAR
+      required: false
+      description: "Shopify product type / category"
+      description_zh: "Shopify 產品類型 / 分類"
+      aliases:
+        - "product_type"
+        - "Product Type"
+        - "type"
+      source: "Shopify Admin API Product.product_type"
+
+    shp_vendor:
+      type: VARCHAR
+      required: false
+      description: "Product vendor / supplier name"
+      description_zh: "產品供應商 / 廠商名稱"
+      aliases:
+        - "vendor"
+        - "Vendor"
+      source: "Shopify Admin API Product.vendor"
+
+    shp_published_status:
+      type: VARCHAR
+      required: false
+      description: "Sales channel publication status (online_store, all)"
+      description_zh: "銷售管道發布狀態(online_store、all)"
+      aliases:
+        - "published_status"
+        - "Published Status"
+        - "status"
+      source: "Shopify Admin API Product.published_status"
+      examples: ["online_store", "all", "unpublished"]
+
+    shp_inventory_quantity:
+      type: INTEGER
+      required: false
+      description: "Total inventory across all variants"
+      description_zh: "所有變體加總的庫存量"
+      aliases:
+        - "inventory_quantity"
+        - "Inventory Quantity"
+        - "inventory"
+      source: "Shopify Admin API InventoryLevel.available aggregated"
+
+    shp_variants_count:
+      type: INTEGER
+      required: false
+      description: "Number of variants"
+      description_zh: "變體數量"
+      aliases:
+        - "variants_count"
+        - "variant_count"
+
+    shp_tags:
+      type: TEXT
+      required: false
+      description: "Product tags (comma-separated)"
+      description_zh: "產品標籤(逗號分隔)"
+      aliases:
+        - "tags"
+        - "Tags"
+        - "Product Tags"
+      source: "Shopify Admin API Product.tags"
+      format: "Comma-separated list"
+
+    shp_seo_title:
+      type: VARCHAR
+      required: false
+      description: "SEO meta title"
+      description_zh: "SEO meta 標題"
+      source: "Shopify Admin API Product.seo.title"
+
+    shp_seo_description:
+      type: TEXT
+      required: false
+      description: "SEO meta description"
+      description_zh: "SEO meta 描述"
+      source: "Shopify Admin API Product.seo.description"
+
+# =============================================================================
+# REVIEWS — Shopify-specific review fields
+# =============================================================================
+# Note: Shopify does not natively store reviews; this section captures common
+# review apps' (Judge.me, Yotpo, Stamped, Loox) typical export formats.
+reviews:
+  description: "Shopify-specific review fields (commonly via Judge.me / Yotpo / Stamped / Loox apps)"
+  description_zh: "Shopify 平台專屬評論欄位(通常經由 Judge.me / Yotpo / Stamped / Loox apps)"
+  extends: "core_reviews_v2"
+  fields:
+    shp_review_app:
+      type: VARCHAR
+      required: false
+      description: "Source review app name (judge_me, yotpo, stamped, loox, other)"
+      description_zh: "來源評論 app 名稱(judge_me、yotpo、stamped、loox、other)"
+      aliases:
+        - "review_app"
+        - "Review App"
+        - "source_app"
+      examples: ["judge_me", "yotpo", "stamped", "loox", "other"]
+
+    shp_verified_buyer:
+      type: BOOLEAN
+      required: false
+      description: "Whether the reviewer is a verified buyer"
+      description_zh: "評論者是否為已驗證買家"
+      aliases:
+        - "verified_buyer"
+        - "Verified Buyer"
+        - "is_verified"
+
+    shp_review_picture_urls:
+      type: TEXT
+      required: false
+      description: "Reviewer-uploaded image URLs (JSON array)"
+      description_zh: "評論者上傳的圖片網址(JSON 陣列)"
+      aliases:
+        - "picture_urls"
+        - "image_urls"
+      format: "JSON array"

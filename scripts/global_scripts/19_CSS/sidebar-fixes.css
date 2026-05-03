@@ -1,0 +1,195 @@
+/*
+ * Sidebar Layout Fixes
+ * Prevents scrollbars and overflow issues
+ */
+
+/* 禁止整個儀表板滾動 */
+html, body {
+  overflow: hidden !important;
+}
+
+/* 針對儀表板主要容器，若需要可設定 overflow: hidden */
+.wrapper, .content-wrapper {
+  overflow: hidden !important;
+}
+
+/* 讓下拉選單部分能夠超出父容器顯示，並固定寬度 */
+.sidebar-filters .selectize-dropdown {
+  overflow: visible !important;
+  position: absolute !important;
+  z-index: 9999 !important;
+  width: 250px !important;  /* 固定下拉選單寬度，可根據需求調整 */
+}
+
+/* 固定 selectize 輸入框的寬度 */
+.sidebar-filters .selectize-control {
+  width: 250px !important;  /* 與下拉選單寬度保持一致 */
+  margin: 0 auto !important; /* 置中 */
+}
+
+/* 如果你用的是 shinyWidgets::pickerInput，其下拉選單類名可能是 .bootstrap-select，
+   你可以加上類似設定： */
+.sidebar-filters .bootstrap-select .dropdown-menu {
+  overflow: visible !important;
+  position: absolute !important;
+  z-index: 9999 !important;
+  width: 250px !important;
+}
+
+/* 固定 pickerInput 輸入框的寬度 */
+.sidebar-filters .bootstrap-select {
+  width: 250px !important;
+  margin: 0 auto !important;
+}
+
+/* 1) 隱藏 sidebar 的水平捲軸，保留垂直捲軸 */
+.sidebar {
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+
+.main-sidebar {
+  overflow-x: hidden !important;
+}
+
+/* 2) 讓 .common-filters 和 .tab-filters 區塊略小於 sidebar 寬度，避免超出 */
+.common-filters,
+.tab-filters {
+  width: 95% !important;     /* 可以依需求調整，如 90%、98% 等 */
+  margin: 0 auto !important; /* 置中 */
+  box-sizing: border-box !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* 3) 避免表單元件(如 selectizeInput) 超出容器，並阻止水平溢出 */
+.common-filters select,
+.tab-filters select,
+.common-filters .form-control,
+.tab-filters .form-control {
+  max-width: 100% !important; /* 確保不會超出父容器 */
+  white-space: nowrap !important;        /* 避免文字換行 */
+  overflow: hidden !important;           /* 多餘文字隱藏 */
+  text-overflow: ellipsis !important;    /* 省略號結尾 (需配合某些 display 屬性) */
+}
+
+/* 4) 標籤 (label) 若希望在單行顯示並省略過長文字，可加上： */
+.control-label {
+  white-space: nowrap !important;     
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  display: block !important;          /* 或 inline-block，看你希望的排版 */
+  max-width: 100% !important;         /* 與父容器相同寬度 */
+}
+
+/* 5) 幫助文字若要自動換行，可以保持 white-space: normal */
+.help-text,
+.data-note {
+  white-space: normal !important; 
+}
+
+/* Fix for bs4Dash sidebar scrolling */
+.os-viewport {
+  overflow-x: hidden !important;
+}
+
+/* Make dropdowns visible outside the overflow */
+.os-content, .os-host {
+  overflow: visible !important;
+}
+
+/* Fix for radio buttons in sidebar */
+.sidebar-filters .radio,
+.sidebar-filters .checkbox {
+  width: 100% !important;
+  max-width: 100% !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* Handle overflows inside the dashboard sidebar */
+.layout-fixed .main-sidebar,
+.main-sidebar,
+.main-sidebar .sidebar,
+.control-sidebar {
+  overflow-x: hidden !important;
+  display: block !important;
+  visibility: visible !important;
+  left: 0 !important;
+  width: 250px !important;
+  z-index: 1000 !important;
+  transition: none !important;
+}
+
+/* BS4Dash specific classes */
+.sidebar-mini .main-sidebar,
+.sidebar-mini-md .main-sidebar,
+.sidebar-mini-xs .main-sidebar {
+  width: 250px !important;
+  transform: translate(0, 0) !important;
+  margin-left: 0 !important;
+}
+
+.main-sidebar .os-content,
+.main-sidebar .os-viewport {
+  display: block !important;
+  visibility: visible !important;
+}
+
+.sidebar .nav-sidebar {
+  overflow-x: hidden !important;
+}
+
+/* Force sidebar to be visible even when collapsed */
+body.sidebar-collapse .main-sidebar,
+.sidebar-collapse .main-sidebar {
+  margin-left: 0 !important;
+  display: block !important;
+  visibility: visible !important;
+  transform: none !important;
+  width: 250px !important;
+}
+
+/* Adjust content and navbar when sidebar is visible */
+.content-wrapper,
+.main-header {
+  margin-left: 250px !important;
+  transition: none !important;
+}
+
+/* Fix navbar layout - ensure navigation buttons are positioned correctly */
+.main-header .navbar-nav {
+  margin-left: 0 !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+}
+
+/* Position the navbar-custom component properly */
+.navbar-custom.navbar-nav {
+  margin-right: 10px !important;
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  transform: none !important;
+}
+
+/* Ensure navbar brand doesn't overlap with nav products */
+.main-header .navbar-brand {
+  margin-right: 20px !important;
+  padding-right: 20px !important;
+}
+
+/* Fix layout for bs4Dash nav products to work with fixed sidebar */
+.layout-fixed .main-header,
+.layout-fixed .main-header .navbar {
+  width: calc(100% - 250px) !important;
+  margin-left: 250px !important;
+  left: 0 !important;
+}
+
+/* Make sure the navbar is above other content */
+.main-header {
+  z-index: 1000 !important;
+}

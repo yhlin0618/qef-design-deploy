@@ -1,0 +1,144 @@
+# metadata_sources.yaml
+# ============================================================================
+# Metadata Sources SCHEMA Definition (Universal)
+# ============================================================================
+# Principle Compliance:
+#   - SO_P016: Configuration Scope Hierarchy (NEW)
+#   - SO_P010: Config-Driven Customization
+#   - SO_P015: No Hardcoded Lookup Tables
+#   - MP137: No Hardcoded Project-Specific Content
+#   - DM_R004 Section 6: Three-Tier Data Architecture
+# ============================================================================
+#
+# IMPORTANT: This file contains SCHEMA ONLY - no company-specific settings!
+#
+# Company-specific settings (enabled, sheet_id, sheet_name) belong in:
+#   {company}/app_config.yaml -> metadata_sources:
+#
+# This file is distributed via git subrepo to ALL companies.
+# Do NOT put company-specific content here!
+#
+# Data Flow:
+#   1. ETL reads app_config.yaml for company settings (enabled, sheet_id)
+#   2. ETL reads this file for schema (target_table, columns, target_scope)
+#   3. ETL merges both and processes enabled sources
+#
+# Three-Tier Data Architecture (DM_R004 Section 6):
+#   - universal: global_scripts/30_global_data/ (ALL companies share)
+#   - company:   {company}/data/app_data/    (single company)
+#   - application: {company}/data/app_data/  (single application)
+#
+# ============================================================================
+
+# --- METADATA SCHEMA DEFINITIONS ---
+# These define the structure, NOT the company-specific settings
+
+metadata_schema:
+  # ----------------------------------------------------------------
+  # Turbo (Turbocharger) - Product line
+  # ----------------------------------------------------------------
+  turbo:
+    target_scope: "company"
+    target_database: "app_data"
+    target_db_file: "app_data.duckdb"
+    target_table: "df_metadata_turbo"
+    description: "Turbocharger product attribute Chinese/English mappings"
+    columns:
+      - predictor_pattern
+      - display_name_zh
+      - display_name_en
+      - display_category
+      - value_type
+      - possible_values
+
+  # ----------------------------------------------------------------
+  # CBZ (Cyberbiz) - E-commerce platform
+  # ----------------------------------------------------------------
+  cbz:
+    target_scope: "company"
+    target_database: "app_data"
+    target_db_file: "app_data.duckdb"
+    target_table: "df_metadata_cbz"
+    description: "Cyberbiz product attribute mappings"
+    columns:
+      - predictor_pattern
+      - display_name_zh
+      - display_name_en
+      - display_category
+      - value_type
+      - possible_values
+
+  # ----------------------------------------------------------------
+  # EBY (eBay) - Marketplace platform
+  # ----------------------------------------------------------------
+  eby:
+    target_scope: "company"
+    target_database: "app_data"
+    target_db_file: "app_data.duckdb"
+    target_table: "df_metadata_eby"
+    description: "eBay product attribute mappings"
+    columns:
+      - predictor_pattern
+      - display_name_zh
+      - display_name_en
+      - display_category
+      - value_type
+      - possible_values
+
+  # ----------------------------------------------------------------
+  # AMZ (Amazon) - Marketplace platform
+  # ----------------------------------------------------------------
+  amz:
+    target_scope: "company"
+    target_database: "app_data"
+    target_db_file: "app_data.duckdb"
+    target_table: "df_metadata_amz"
+    description: "Amazon product attribute mappings"
+    columns:
+      - predictor_pattern
+      - display_name_zh
+      - display_name_en
+      - display_category
+      - value_type
+      - possible_values
+
+  # ----------------------------------------------------------------
+  # Product Mapping - Cross-platform product ID mapping (DM_R052)
+  # ----------------------------------------------------------------
+  product_mapping:
+    target_scope: "company"
+    target_database: "app_data"
+    target_db_file: "app_data.duckdb"
+    target_table: "df_product_mapping"
+    description: "Cross-platform product ID mapping (SKU to eBay/Amazon) - M:N relationship"
+    source_type: "excel"
+    principle_ref: "DM_R052"
+    columns:
+      - mapping_id        # PK, auto-increment (Surrogate Key)
+      - sku               # CBZ/Official SKU (allows duplicates, nullable)
+      - eby_item_id       # eBay item number (allows duplicates, nullable)
+      - amz_asin          # Amazon ASIN (reserved, nullable)
+      - product_name      # Product name
+      - product_line_name # Product line
+      - color_variant     # Color variant (optional, for M:N tracking)
+
+# --- UNIVERSAL METADATA SCHEMA (ALL companies share) ---
+# These go to global_scripts/30_global_data/
+
+metadata_universal_schema:
+  # ----------------------------------------------------------------
+  # Common - Universal variable mappings (time, colors, etc.)
+  # ----------------------------------------------------------------
+  common:
+    target_scope: "universal"
+    target_database: "30_global_data"
+    target_db_file: "global_scd_type1.duckdb"
+    target_table: "df_metadata_common"
+    description: "Cross-company common variable mappings (time, colors, etc.)"
+    columns:
+      - predictor_pattern
+      - display_name_zh
+      - display_name_en
+      - display_category
+      - value_type
+      - possible_values

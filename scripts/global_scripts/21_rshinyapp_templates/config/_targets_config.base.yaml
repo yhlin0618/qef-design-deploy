@@ -1,0 +1,131 @@
+# =============================================================================
+# _targets_config.base.yaml
+# MAMBA Pipeline Configuration Base Template
+# =============================================================================
+#
+# PRINCIPLE COMPLIANCE:
+#   - MP142: Configuration-Driven Pipeline (v1.1)
+#   - SO_P016: Configuration Scope Hierarchy (Universal scope)
+#   - MP122: Triple-Track Subrepo Architecture (Track 1: global_scripts)
+#
+# THREE-LAYER ARCHITECTURE:
+#   Layer 1 (THIS FILE): Schema + Defaults (Universal, shared via subrepo)
+#   Layer 2: app_config.yaml > pipeline: (Company-specific overrides)
+#   Layer 3: {project_root}/_targets_config.yaml (Generated output)
+#
+# =============================================================================
+# WHAT THIS FILE SHOULD CONTAIN (✓):
+#   ✓ Structure definitions (schema, naming patterns)
+#   ✓ Default execution settings (workers, timeouts)
+#   ✓ Universal excluded patterns
+#   ✓ Available platform definitions (schema only)
+#
+# WHAT THIS FILE MUST NOT CONTAIN (✗):
+#   ✗ Platform enabled flags (e.g., cbz: enabled: true)
+#   ✗ Specific script lists (auto-discovered at runtime)
+#   ✗ Company-specific dependencies
+#   ✗ Environment-specific paths (e.g., /opt/company/logs/)
+#   ✗ API keys, credentials, or secrets
+# =============================================================================
+#
+# USAGE:
+#   1. This template is merged with app_config.yaml pipeline: section
+#   2. Result is written to {project_root}/_targets_config.yaml
+#   3. Commands: make config-merge && make config-scan
+#
+# DOCUMENTATION:
+#   - templates/README.md - Detailed usage guide
+#   - 00_principles/docs/.../MP142_configuration_driven_pipeline.qmd
+#
+# =============================================================================
+
+version: "1.0"
+template_type: "base"
+last_updated: "2025-12-24"
+
+# =============================================================================
+# 6-Layer Symmetric Pipeline (per DF00 revised 2025-12-24)
+# =============================================================================
+phase_order:
+  - "0IM"   # Import: Raw data ingestion → raw_data.duckdb
+  - "1ST"   # Staging: Type optimization, encoding → staged_data.duckdb
+  - "2TR"   # Transform: Structural JOINs → transformed_data.duckdb
+  - "3PR"   # Process: Business logic → processed_data.duckdb
+  - "4CL"   # Cleanse: Data quality → cleansed_data.duckdb
+  - "5NM"   # Normalize: App delivery → app_data.duckdb
+
+# =============================================================================
+# Default Execution Settings
+# =============================================================================
+execution:
+  parallel_workers: 4
+  per_target_timeout_minutes: 30
+  total_pipeline_timeout_hours: 4
+  log_retention_days: 30
+
+# =============================================================================
+# Platform Structure Schema (for auto-discovery)
+# =============================================================================
+platform_schema:
+  etl:
+    naming_pattern: "{platform}_ETL_{datatype}_{phase}.R"
+    directory_pattern: "ETL/{platform}/"
+    phases_available:
+      - "0IM"
+      - "1ST"
+      - "2TR"
+    auto_dependency_rule: "Same datatype, earlier phase"
+
+  drv:
+    naming_pattern: "{platform}_D{group}_{seq}.R"
+    directory_pattern: "DRV/{platform}/"
+    groups_available:
+      - "D01"  # Customer Profile
+      - "D03"  # Analysis
+      - "D04"  # Poisson Analysis
+      - "D05"  # Macro Trend Analysis
+    auto_dependency_rule: "Within group, earlier sequence"
+
+# =============================================================================
+# Available Platforms (Schema only, enable in app_config.yaml)
+# =============================================================================
+available_platforms:
+  cbz:
+    name: "Cyberbiz"
+    description: "Primary e-commerce platform"
+  amz:
+    name: "Amazon"
+    description: "Amazon marketplace platform"
+  eby:
+    name: "eBay"
+    description: "eBay marketplace platform"
+  all:
+    name: "Cross-Platform"
+    description: "Cross-platform aggregations"
+  precision:
+    name: "Precision Marketing"
+    description: "Precision marketing specific pipelines"
+
+# =============================================================================
+# Excluded Patterns (files to skip during discovery)
+# =============================================================================
+excluded_patterns:
+  - "**/backup_*/**"
+  - "**/archive/**"
+  - "**/check_*.R"
+  - "**/validate_*.R"
+  - "**/generate_*.R"
+  - "**/consolidate_*.R"
+  - "**/rename_*.R"
+  - "**/update_all_platforms_*.R"
+  - "**/*_DEBUG.R"
+  - "**/*_test.R"
+  - "**/*_backup.R"
+
+# =============================================================================
+# Scheduling Defaults
+# =============================================================================
+scheduling:
+  default_mode: "manual"
+  cron_schedule: "0 2 * * 0"  # Sunday 2:00 AM
+  log_path: "logs/"

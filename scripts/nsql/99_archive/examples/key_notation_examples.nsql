@@ -1,0 +1,64 @@
+# NSQL Key Notation Examples
+# Demonstrates the key notation pattern for dataset descriptions
+
+# Basic key notation for single tables
+# CustomerProfiles (key = customer_id)
+# OrderHistory (key = order_id)
+# ProductCatalog (key = product_id)
+
+# Example 1: Transform with explicit key notation
+transform CustomerProfiles (key = customer_id) to CustomerSummary as
+  customer_id,
+  name,
+  email,
+  count(distinct order_id) as order_count
+  joined with OrderHistory (key = order_id) on CustomerProfiles.customer_id = OrderHistory.customer_id
+  grouped by customer_id, name, email
+
+# Example 2: Composite key notation
+# OrderDetails (key = [order_id, product_id])
+transform OrderDetails (key = [order_id, product_id]) to OrderLineItems as
+  order_id,
+  product_id,
+  quantity,
+  unit_price,
+  quantity * unit_price as line_total
+  joined with Products (key = product_id) on OrderDetails.product_id = Products.product_id
+  where order_date > date("2025-01-01")
+
+# Example 3: Complete vs partial dataset relationship
+# CustomerProfiles (complete, key = customer_id) - All customers
+# CustomerDNA (partial, key = customer_id) - Only analyzed customers
+transform CustomerProfiles (complete, key = customer_id) to CustomerAnalytics as
+  CustomerProfiles.customer_id,
+  CustomerProfiles.name,
+  CustomerProfiles.email,
+  coalesce(CustomerDNA.r_value, 0) as recency,
+  coalesce(CustomerDNA.f_value, 0) as frequency,
+  coalesce(CustomerDNA.m_value, 0) as monetary
+  joined with CustomerDNA (partial, key = customer_id) 
+    on CustomerProfiles.customer_id = CustomerDNA.customer_id
+  options(
+    join_type: "left",
+    visualization_safe: true,
+    null_handling: "default_values"
+  )
+
+# Example 4: Arrow pattern with key notation
+CustomerProfiles (key = customer_id) ->
+  join(
+    OrderHistory (key = order_id),
+    on = "customer_id",
+    type = "left"
+  ) ->
+  group(customer_id, name) ->
+  aggregate(
+    total_spent = sum(order_total),
+    order_count = count(order_id),
+    avg_order = mean(order_total)
+  )
+
+# Example 5: Natural language query using key notation
+show all CustomerProfiles (key = customer_id)
+with matching CustomerDNA (key = customer_id)
+displaying recency, frequency, and monetary values

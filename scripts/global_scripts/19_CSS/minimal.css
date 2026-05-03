@@ -1,0 +1,38 @@
+/*
+ * Minimal CSS
+ * Contains only essential styling restrictions
+ */
+
+/* Prevent scrolling in any direction */
+html, body {
+  overflow: hidden !important;
+  height: 100% !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Ensure content stays within boundaries */
+.wrapper, 
+.content-wrapper, 
+.main-sidebar {
+  overflow: hidden !important;
+}
+
+/* But allow scrolling in specific containers that need it */
+.sidebar {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+.content {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  height: calc(100vh - 57px) !important; /* Adjust based on header height */
+}
+
+/* Allow dropdowns to appear above containers */
+.dropdown-menu {
+  overflow: visible !important;
+  z-index: 9999 !important;
+}

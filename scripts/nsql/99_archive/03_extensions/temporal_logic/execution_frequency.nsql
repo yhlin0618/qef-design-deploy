@@ -1,0 +1,73 @@
+-- NSQL Temporal Logic: Execution Frequency Operators
+-- Defining temporal operators for execution frequency in application lifecycle
+
+-- Execution Frequency Operators Definition
+
+-- Once(expr) - Expression is evaluated exactly once during the application lifecycle
+-- Typically during initialization
+DEFINE OPERATOR Once(expr) AS
+  LET evaluation_time = FIRST(ApplicationLifecycle)
+  IN AT(evaluation_time, expr)
+
+-- OnEvery(event, expr) - Expression is evaluated on every occurrence of the event
+-- Similar to reactive expressions in Shiny
+DEFINE OPERATOR OnEvery(event, expr) AS
+  FORALL t IN ApplicationLifecycle:
+    IF OCCURS(event, t) THEN AT(t, expr)
+
+-- AtMost(n, expr) - Expression is evaluated at most n times
+DEFINE OPERATOR AtMost(n, expr) AS
+  ASSERT COUNT(EvaluationEvents(expr)) <= n
+
+-- Periodically(interval, expr) - Expression is evaluated at regular intervals
+DEFINE OPERATOR Periodically(interval, expr) AS
+  FORALL t IN ApplicationLifecycle:
+    IF t % interval = 0 THEN AT(t, expr)
+
+-- StaticBinding(expr) - Binds expression value once at initialization time
+-- This is what happens with UI definitions in Shiny
+DEFINE OPERATOR StaticBinding(expr) AS
+  LET init_time = FIRST(ApplicationLifecycle)
+  LET value = AT(init_time, expr)
+  IN FORALL t IN ApplicationLifecycle: AT(t, value)
+
+-- DynamicBinding(expr) - Re-evaluates expression whenever dependencies change
+-- This is what happens with reactive expressions in Shiny
+DEFINE OPERATOR DynamicBinding(expr) AS
+  FORALL t IN ApplicationLifecycle:
+    IF CHANGED(DEPENDENCIES(expr), t) THEN AT(t, expr)
+
+-- Example Usage in NSQL
+
+-- UI components evaluated once at startup
+Union(components) :- StaticBinding(
+  -- Create the union of components once at initialization
+  COMBINE ALL components INTO single_dom_structure
+)
+
+-- CSS visibility changes that happen reactively
+Show(component_id) :- DynamicBinding(
+  -- Re-evaluated whenever dependencies change
+  SET CSS_PROPERTY(component_id, "display", "block")
+)
+
+Hide(component_id) :- DynamicBinding(
+  -- Re-evaluated whenever dependencies change
+  SET CSS_PROPERTY(component_id, "display", "none")
+)
+
+-- Application to unionUI concept
+unionUI(components) :- 
+  -- Create all components once at startup (static binding)
+  StaticBinding(
+    FOREACH component IN components:
+      CREATE_DOM_ELEMENT(component)
+  ) AND
+  -- Control visibility dynamically (dynamic binding)
+  DynamicBinding(
+    FOREACH component IN components:
+      IF should_show(component) THEN
+        Show(component)
+      ELSE
+        Hide(component)
+  )

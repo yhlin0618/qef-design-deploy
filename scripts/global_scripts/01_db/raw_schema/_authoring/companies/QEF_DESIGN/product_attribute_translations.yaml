@@ -1,0 +1,384 @@
+# product_attribute_translations.yaml
+#
+# Chinese-to-English canonical translation map for QEF product attribute columns.
+# Used by gen_product_attribute_schemas.R to generate product_attribute_schemas.yaml.
+#
+# Bound by DEV_R056 (Project Primary Language — R First) and SO_R038 (Schema Authoring
+# YAML Naming Convention). All canonical names follow ^[a-z][a-z0-9_]*$.
+#
+# Source: union of column headers from
+#   QEF_DESIGN/data/database_to_csv/raw_data/df_product_profile_*.csv (12 files, 319 unique cols)
+#
+# Naming convention prefixes:
+#   material_*       — frame/lens/temple/tip materials
+#   protection_*     — UV / blue light / anti-glare protections
+#   feature_*        — anti-fog / anti-scratch / etc.
+#   dimension_*      — width / height / length / weight measurements
+#   rating_*         — review-derived sentiment scores
+#   activity_*       — sports / recreational activities
+#   user_*           — user persona / profession
+#   demographic_*    — age / gender demographics
+#   scene_*          — usage scene
+#   style_*          — aesthetic style
+#   accessory_*      — included accessories
+#   standard_*       — certification standards
+#   pkg_*            — packaging items
+#   service_*        — services
+#
+# Most recent significant edit: spectra change qef-product-master-redesign Phase 9 task 9.2
+# Change discipline: any new translation entry SHALL ship through this file (not inline in
+# generator script); modifications SHALL preserve the canonical name to avoid downstream
+# bridge yaml drift.
+
+translations:
+
+  # IDENTITY + PRICING
+  "品牌": { canonical: brand, type: VARCHAR, description: "Product brand name" }
+  "ASIN": { canonical: asin, type: VARCHAR, description: "Amazon ASIN" }
+  "SKU": { canonical: sku, type: VARCHAR, description: "Stock Keeping Unit" }
+  "商品名稱": { canonical: product_name, type: VARCHAR, description: "Product display name" }
+  "排名": { canonical: rank, type: INTEGER, description: "Sales rank or list rank" }
+  "銷售平台": { canonical: sales_platform, type: VARCHAR, description: "Sales platform code" }
+  "競爭對手": { canonical: is_competitor, type: BOOLEAN, description: "Whether classified as competitor" }
+  "標竿產品": { canonical: is_benchmark_product, type: BOOLEAN, description: "Whether classified as benchmark / own product" }
+  "網址": { canonical: url, type: VARCHAR, description: "Product detail page URL" }
+  "價格": { canonical: price, type: DOUBLE, description: "Product price (canonical scalar)" }
+  "價格_原價": { canonical: price_original, type: DOUBLE, description: "Original price before discount" }
+  "價格_現價": { canonical: price_current, type: DOUBLE, description: "Current price after discount" }
+  "數量": { canonical: quantity, type: INTEGER, description: "Quantity per package" }
+  "產品數量": { canonical: product_count, type: INTEGER, description: "Number of products in package" }
+  "原產地": { canonical: country_of_origin, type: VARCHAR, description: "Country of origin" }
+  "保固": { canonical: warranty, type: VARCHAR, description: "Warranty period or description" }
+  "尺寸": { canonical: size, type: VARCHAR, description: "Generic size descriptor" }
+  "重量": { canonical: weight, type: VARCHAR, description: "Generic weight descriptor" }
+
+  "清潔方式": { canonical: cleaning_method, type: VARCHAR, description: "Recommended cleaning method" }
+  # REVIEW METRICS
+  "評論星級": { canonical: review_rating, type: DOUBLE, description: "Average review star rating (0-5)" }
+  "評論則數": { canonical: review_count, type: INTEGER, description: "Total number of reviews" }
+
+  # MATERIALS
+  "鏡框材質": { canonical: material_frame, type: VARCHAR, description: "Frame material" }
+  "鏡片材質": { canonical: material_lens, type: VARCHAR, description: "Lens material" }
+  "鼻墊材質": { canonical: material_nose_pad, type: VARCHAR, description: "Nose pad material" }
+  "鏡腳末端材質": { canonical: material_temple_tip, type: VARCHAR, description: "Temple tip material" }
+  "眉護片材質": { canonical: material_brow_guard, type: VARCHAR, description: "Brow guard material" }
+  "綁帶材質": { canonical: material_strap, type: VARCHAR, description: "Strap material" }
+  "無毒材質": { canonical: material_non_toxic, type: BOOLEAN, description: "Non-toxic material" }
+  "環保材質": { canonical: material_eco_friendly, type: BOOLEAN, description: "Eco-friendly material" }
+  "不含聚氯乙烯": { canonical: material_pvc_free, type: BOOLEAN, description: "PVC-free" }
+  "不含鄰苯二甲酸酯": { canonical: material_phthalate_free, type: BOOLEAN, description: "Phthalate-free" }
+  "不含雙酚.A": { canonical: material_bpa_free, type: BOOLEAN, description: "BPA-free" }
+
+  # COLORS
+  "鏡片顏色": { canonical: color_lens, type: VARCHAR, description: "Lens color" }
+  "鏡腳顏色": { canonical: color_temple, type: VARCHAR, description: "Temple color" }
+  "鏡框顏色": { canonical: color_frame, type: VARCHAR, description: "Frame color" }
+  "鮮艷顏色": { canonical: color_vibrant, type: BOOLEAN, description: "Vibrant color option available" }
+
+  # DIMENSIONS
+  "鏡框寬度": { canonical: dimension_frame_width, type: DOUBLE, description: "Frame width in mm" }
+  "鏡框高度": { canonical: dimension_frame_height, type: DOUBLE, description: "Frame height in mm" }
+  "鏡框最大寬度": { canonical: dimension_frame_max_width, type: DOUBLE, description: "Frame maximum width in mm" }
+  "鏡片寬度": { canonical: dimension_lens_width, type: DOUBLE, description: "Lens width in mm" }
+  "鏡片高度": { canonical: dimension_lens_height, type: DOUBLE, description: "Lens height in mm" }
+  "鏡片尺寸": { canonical: dimension_lens_size, type: VARCHAR, description: "Generic lens size" }
+  "鏡腳長度": { canonical: dimension_temple_length, type: DOUBLE, description: "Temple length in mm" }
+  "鏡腳最大長度": { canonical: dimension_temple_max_length, type: DOUBLE, description: "Temple maximum length in mm" }
+  "鼻橋寬度": { canonical: dimension_bridge_width, type: DOUBLE, description: "Nose bridge width in mm" }
+  "綁帶長度": { canonical: dimension_strap_length, type: DOUBLE, description: "Strap length in mm" }
+  "產品重量": { canonical: dimension_product_weight, type: DOUBLE, description: "Product weight in grams" }
+  "鏡框加寬": { canonical: dimension_frame_widened, type: BOOLEAN, description: "Frame widened variant" }
+  "鏡腳加寬": { canonical: dimension_temple_widened, type: BOOLEAN, description: "Temples widened" }
+  "眼鏡加大": { canonical: dimension_eyewear_oversized, type: BOOLEAN, description: "Oversized eyewear" }
+
+  # PRESCRIPTION COMPATIBILITY
+  "處方鏡框": { canonical: prescription_frame_compatible, type: BOOLEAN, description: "Compatible with prescription lens" }
+  "處方眼鏡鏡框最大寬度": { canonical: prescription_frame_max_width, type: DOUBLE, description: "Max prescription frame width" }
+  "處方眼鏡鏡片最大寬度": { canonical: prescription_lens_max_width, type: DOUBLE, description: "Max prescription lens width" }
+  "處方眼鏡鏡片最大高度": { canonical: prescription_lens_max_height, type: DOUBLE, description: "Max prescription lens height" }
+  "處方鏡框適配_厚度": { canonical: prescription_frame_fit_thickness, type: VARCHAR, description: "Prescription frame thickness fit" }
+  "處方鏡框適配_圓形": { canonical: prescription_frame_fit_round, type: BOOLEAN, description: "Round prescription frame fit" }
+  "處方鏡框適配_方形": { canonical: prescription_frame_fit_square, type: BOOLEAN, description: "Square prescription frame fit" }
+  "外掛式鏡框": { canonical: clip_on_frame, type: BOOLEAN, description: "Clip-on frame design" }
+  "外掛式鏡框適配_厚度": { canonical: clip_on_fit_thickness, type: VARCHAR, description: "Clip-on thickness fit" }
+  "外掛式鏡框適配_圓形": { canonical: clip_on_fit_round, type: BOOLEAN, description: "Clip-on fits round host" }
+  "外掛式鏡框適配_方形": { canonical: clip_on_fit_square, type: BOOLEAN, description: "Clip-on fits square host" }
+  "近視鏡片架": { canonical: rx_insert_holder, type: BOOLEAN, description: "Has prescription lens insert holder" }
+
+  # PROTECTION
+  "紫外線防護": { canonical: protection_uv, type: BOOLEAN, description: "UV protection" }
+  "藍光阻隔": { canonical: protection_blue_light, type: BOOLEAN, description: "Blue light blocking" }
+  "藍光阻隔率....": { canonical: protection_blue_light_rate, type: VARCHAR, description: "Blue light blocking rate" }
+  "高能可見光阻隔技術": { canonical: protection_hev_block, type: BOOLEAN, description: "HEV light blocking" }
+  "UV420.防護": { canonical: protection_uv420, type: BOOLEAN, description: "UV420 protection" }
+  "UV580.防護": { canonical: protection_uv580, type: BOOLEAN, description: "UV580 protection" }
+  "U6紫外線防護等級": { canonical: protection_uv_grade_u6, type: BOOLEAN, description: "U6 UV grade" }
+  "眼睛保護": { canonical: protection_eye_general, type: BOOLEAN, description: "General eye protection" }
+  "預防白內障與黃斑部病變": { canonical: protection_cataract_macular, type: BOOLEAN, description: "Helps prevent cataracts and macular degeneration" }
+  "防偏頭痛": { canonical: protection_migraine, type: BOOLEAN, description: "Migraine prevention" }
+  "減少黃光": { canonical: protection_reduce_yellow_light, type: BOOLEAN, description: "Reduces yellow light" }
+  "避免眼睛疲勞": { canonical: protection_eye_strain, type: BOOLEAN, description: "Reduces eye strain" }
+
+  # FUNCTIONAL FEATURES
+  "防霧功能": { canonical: feature_anti_fog, type: BOOLEAN, description: "Anti-fog coating" }
+  "防刮功能": { canonical: feature_anti_scratch, type: BOOLEAN, description: "Anti-scratch coating" }
+  "防反射功能": { canonical: feature_anti_reflection, type: BOOLEAN, description: "Anti-reflective coating" }
+  "防水功能": { canonical: feature_waterproof, type: BOOLEAN, description: "Waterproof feature" }
+  "防水鍍層": { canonical: feature_water_repellent_coating, type: BOOLEAN, description: "Water-repellent coating" }
+  "防油功能": { canonical: feature_oil_repellent, type: BOOLEAN, description: "Oil-repellent coating" }
+  "防汗功能": { canonical: feature_sweat_resistant, type: BOOLEAN, description: "Sweat resistance" }
+  "防風功能": { canonical: feature_windproof, type: BOOLEAN, description: "Wind protection" }
+  "防飛濺功能": { canonical: feature_splash_resistant, type: BOOLEAN, description: "Splash resistance" }
+  "防剝離功能": { canonical: feature_anti_peel, type: BOOLEAN, description: "Anti-peel coating" }
+  "防碎功能": { canonical: feature_shatter_proof, type: BOOLEAN, description: "Shatter-proof feature" }
+  "防海水腐蝕": { canonical: feature_saltwater_resistant, type: BOOLEAN, description: "Saltwater corrosion resistance" }
+  "防滑鏡腳": { canonical: feature_anti_slip_temple, type: BOOLEAN, description: "Anti-slip temple grip" }
+  "防滑眉護片": { canonical: feature_anti_slip_brow_guard, type: BOOLEAN, description: "Anti-slip brow guard" }
+  "鏡片耐污": { canonical: feature_lens_stain_resistant, type: BOOLEAN, description: "Stain-resistant lens" }
+  "鏡片防碎裂": { canonical: feature_lens_shatter_resistant, type: BOOLEAN, description: "Shatter-resistant lens" }
+  "耐衝擊": { canonical: feature_impact_resistant, type: BOOLEAN, description: "Impact resistance" }
+  "耐熱": { canonical: feature_heat_resistant, type: BOOLEAN, description: "Heat resistance" }
+  "耐磨損功能": { canonical: feature_wear_resistant, type: BOOLEAN, description: "Wear resistance" }
+  "抗氧化功能": { canonical: feature_anti_oxidation, type: BOOLEAN, description: "Anti-oxidation feature" }
+  "偏光功能": { canonical: feature_polarized, type: BOOLEAN, description: "Polarized lens" }
+  "降低眩光": { canonical: feature_reduce_glare, type: BOOLEAN, description: "Glare reduction" }
+  "顏色對比": { canonical: feature_color_contrast, type: BOOLEAN, description: "Enhanced color contrast" }
+  "真實色彩": { canonical: feature_true_color, type: BOOLEAN, description: "True color rendering" }
+  "高透射率": { canonical: feature_high_transmittance, type: BOOLEAN, description: "High light transmittance" }
+  "透光佳": { canonical: feature_good_light_transmission, type: BOOLEAN, description: "Good light transmission" }
+  "變色鏡片.": { canonical: feature_photochromic_lens, type: BOOLEAN, description: "Photochromic lens" }
+  "易於清潔": { canonical: feature_easy_to_clean, type: BOOLEAN, description: "Easy-to-clean surface" }
+  "易於安裝": { canonical: feature_easy_to_install, type: BOOLEAN, description: "Easy-to-install design" }
+  "排汗快乾": { canonical: feature_moisture_wicking, type: BOOLEAN, description: "Moisture-wicking" }
+  "輕巧設計": { canonical: feature_lightweight_design, type: BOOLEAN, description: "Lightweight design" }
+  "彈性鏡框": { canonical: feature_flexible_frame, type: BOOLEAN, description: "Flexible frame material" }
+  "輕薄鏡框": { canonical: feature_thin_light_frame, type: BOOLEAN, description: "Thin and light frame" }
+  "纖細鏡腳": { canonical: feature_slim_temple, type: BOOLEAN, description: "Slim temple design" }
+  "通風設計": { canonical: feature_ventilation_design, type: BOOLEAN, description: "Ventilation design" }
+  "通風鏡腳": { canonical: feature_ventilated_temple, type: BOOLEAN, description: "Ventilated temple" }
+  "環繞式設計": { canonical: feature_wraparound, type: BOOLEAN, description: "Wraparound frame" }
+  "人體工學設計": { canonical: feature_ergonomic_design, type: BOOLEAN, description: "Ergonomic design" }
+  "完美貼合": { canonical: feature_perfect_fit, type: BOOLEAN, description: "Perfect fit claim" }
+  "精準合適": { canonical: feature_precise_fit, type: BOOLEAN, description: "Precise fit claim" }
+  "可互換鏡片": { canonical: feature_interchangeable_lens, type: BOOLEAN, description: "Interchangeable lens" }
+  "可轉換設計": { canonical: feature_convertible_design, type: BOOLEAN, description: "Convertible design" }
+  "可彎鏡腳尾端": { canonical: feature_bendable_temple_tip, type: BOOLEAN, description: "Bendable temple tip" }
+  "可調整鼻墊": { canonical: feature_adjustable_nose_pad, type: BOOLEAN, description: "Adjustable nose pad" }
+  "可調整鏡腿": { canonical: feature_adjustable_temple, type: BOOLEAN, description: "Adjustable temple" }
+  "可調整綁帶": { canonical: feature_adjustable_strap, type: BOOLEAN, description: "Adjustable strap" }
+  "可拆卸側護片": { canonical: feature_removable_side_shield, type: BOOLEAN, description: "Removable side shield" }
+  "可拆卸橡膠耳套": { canonical: feature_removable_rubber_ear_cover, type: BOOLEAN, description: "Removable rubber ear cover" }
+  "可拆卸泡棉墊片": { canonical: feature_removable_foam_padding, type: BOOLEAN, description: "Removable foam padding" }
+  "可回收包裝": { canonical: feature_recyclable_packaging, type: BOOLEAN, description: "Recyclable packaging" }
+  "彈簧鉸鏈": { canonical: feature_spring_hinge, type: BOOLEAN, description: "Spring hinge" }
+  "一體式鉸鏈": { canonical: feature_integrated_hinge, type: BOOLEAN, description: "Integrated hinge" }
+  "柔軟鼻托": { canonical: feature_soft_nose_pad, type: BOOLEAN, description: "Soft nose pad" }
+  "側護片": { canonical: feature_side_shield, type: BOOLEAN, description: "Side shield protection" }
+  "圓柱型鏡片": { canonical: feature_cylindrical_lens, type: BOOLEAN, description: "Cylindrical lens shape" }
+  "空氣動力學鏡框": { canonical: feature_aerodynamic_frame, type: BOOLEAN, description: "Aerodynamic frame" }
+  "低敏設計": { canonical: feature_hypoallergenic, type: BOOLEAN, description: "Hypoallergenic design" }
+  "專利技術": { canonical: feature_patented_technology, type: BOOLEAN, description: "Patented technology" }
+  "CP值高": { canonical: feature_high_value, type: BOOLEAN, description: "High value-for-money" }
+  "夜間使用": { canonical: feature_night_use, type: BOOLEAN, description: "Night use suitable" }
+  "長時間使用": { canonical: feature_long_duration_use, type: BOOLEAN, description: "Long-duration use" }
+  "防曬用途": { canonical: feature_sun_protection_use, type: BOOLEAN, description: "Sun protection use case" }
+  "運動安全": { canonical: feature_sport_safety, type: BOOLEAN, description: "Sport safety feature" }
+
+  # SUBJECTIVE RATINGS
+  "視野清晰": { canonical: rating_clear_vision, type: DOUBLE, description: "Clear vision sentiment (0-1)" }
+  "無失真": { canonical: rating_no_distortion, type: DOUBLE, description: "No-distortion sentiment (0-1)" }
+  "穿戴舒適": { canonical: rating_comfortable_wear, type: DOUBLE, description: "Comfort sentiment (0-1)" }
+  "耐用性": { canonical: rating_durability, type: DOUBLE, description: "Durability sentiment (0-1)" }
+
+  # ACTIVITIES
+  "棒球": { canonical: activity_baseball, type: BOOLEAN, description: "Baseball use case" }
+  "壘球": { canonical: activity_softball, type: BOOLEAN, description: "Softball use case" }
+  "籃球": { canonical: activity_basketball, type: BOOLEAN, description: "Basketball use case" }
+  "足球": { canonical: activity_football, type: BOOLEAN, description: "Football use case" }
+  "橄欖球": { canonical: activity_rugby, type: BOOLEAN, description: "Rugby use case" }
+  "排球": { canonical: activity_volleyball, type: BOOLEAN, description: "Volleyball use case" }
+  "網球": { canonical: activity_tennis, type: BOOLEAN, description: "Tennis use case" }
+  "板式網球": { canonical: activity_paddle_tennis, type: BOOLEAN, description: "Paddle tennis use case" }
+  "板球": { canonical: activity_cricket, type: BOOLEAN, description: "Cricket use case" }
+  "匹克球": { canonical: activity_pickleball, type: BOOLEAN, description: "Pickleball use case" }
+  "高爾夫運動": { canonical: activity_golf, type: BOOLEAN, description: "Golf use case" }
+  "釣魚": { canonical: activity_fishing, type: BOOLEAN, description: "Fishing use case" }
+  "海釣": { canonical: activity_sea_fishing, type: BOOLEAN, description: "Sea fishing use case" }
+  "休閒船釣": { canonical: activity_leisure_boat_fishing, type: BOOLEAN, description: "Leisure boat fishing use case" }
+  "划船": { canonical: activity_rowing, type: BOOLEAN, description: "Rowing use case" }
+  "水上運動": { canonical: activity_water_sports, type: BOOLEAN, description: "Water sports use case" }
+  "潛水": { canonical: activity_diving, type: BOOLEAN, description: "Diving use case" }
+  "滑雪": { canonical: activity_skiing, type: BOOLEAN, description: "Skiing use case" }
+  "滑板": { canonical: activity_skateboarding, type: BOOLEAN, description: "Skateboarding use case" }
+  "登山": { canonical: activity_mountaineering, type: BOOLEAN, description: "Mountaineering use case" }
+  "健行": { canonical: activity_hiking, type: BOOLEAN, description: "Hiking use case" }
+  "徒步旅行": { canonical: activity_trekking, type: BOOLEAN, description: "Trekking use case" }
+  "跑步": { canonical: activity_running, type: BOOLEAN, description: "Running use case" }
+  "自行車": { canonical: activity_cycling, type: BOOLEAN, description: "Cycling use case" }
+  "公路騎行": { canonical: activity_road_cycling, type: BOOLEAN, description: "Road cycling use case" }
+  "登山車": { canonical: activity_mountain_biking, type: BOOLEAN, description: "Mountain biking use case" }
+  "ＢMX": { canonical: activity_bmx, type: BOOLEAN, description: "BMX cycling use case" }
+  "機車": { canonical: activity_motorcycle, type: BOOLEAN, description: "Motorcycle use case" }
+  "機車騎乘": { canonical: activity_motorcycle_riding, type: BOOLEAN, description: "Motorcycle riding use case" }
+  "UTV.越野車": { canonical: activity_utv, type: BOOLEAN, description: "UTV / off-road vehicle use case" }
+  "賽車": { canonical: activity_racing, type: BOOLEAN, description: "Racing use case" }
+  "射擊": { canonical: activity_shooting, type: BOOLEAN, description: "Shooting sports use case" }
+  "飛碟射擊": { canonical: activity_clay_shooting, type: BOOLEAN, description: "Clay-pigeon shooting use case" }
+  "靶場訓練": { canonical: activity_range_training, type: BOOLEAN, description: "Range training use case" }
+  "狩獵": { canonical: activity_hunting, type: BOOLEAN, description: "Hunting use case" }
+  "生存遊戲": { canonical: activity_airsoft, type: BOOLEAN, description: "Airsoft use case" }
+  "鐵人三項": { canonical: activity_triathlon, type: BOOLEAN, description: "Triathlon use case" }
+  "極限運動": { canonical: activity_extreme_sports, type: BOOLEAN, description: "Extreme sports use case" }
+  "動力運動": { canonical: activity_powersports, type: BOOLEAN, description: "Powersports use case" }
+  "跳傘": { canonical: activity_skydiving, type: BOOLEAN, description: "Skydiving use case" }
+  "越野冒險": { canonical: activity_off_road_adventure, type: BOOLEAN, description: "Off-road adventure use case" }
+  "園藝": { canonical: activity_gardening, type: BOOLEAN, description: "Gardening use case" }
+  "駕駛": { canonical: activity_driving, type: BOOLEAN, description: "Driving use case" }
+  "賞鳥": { canonical: activity_birdwatching, type: BOOLEAN, description: "Birdwatching use case" }
+  "健身": { canonical: activity_fitness, type: BOOLEAN, description: "Fitness use case" }
+  "風景漫步": { canonical: activity_scenic_walk, type: BOOLEAN, description: "Scenic walking use case" }
+  "散步": { canonical: activity_walking, type: BOOLEAN, description: "Walking use case" }
+  "遛狗": { canonical: activity_dog_walking, type: BOOLEAN, description: "Dog walking use case" }
+  "通勤": { canonical: activity_commuting, type: BOOLEAN, description: "Commuting use case" }
+  "旅行": { canonical: activity_travel, type: BOOLEAN, description: "Travel use case" }
+  "購物": { canonical: activity_shopping, type: BOOLEAN, description: "Shopping use case" }
+  "送禮": { canonical: activity_gift, type: BOOLEAN, description: "Gift use case" }
+  "睡眠": { canonical: activity_sleeping, type: BOOLEAN, description: "Sleeping use case" }
+  "閱讀者": { canonical: activity_reading, type: BOOLEAN, description: "Reading use case" }
+  "劇迷": { canonical: activity_theater_fan, type: BOOLEAN, description: "Theater fan use case" }
+  "遊戲": { canonical: activity_gaming, type: BOOLEAN, description: "Gaming use case" }
+  "自拍": { canonical: activity_selfie, type: BOOLEAN, description: "Selfie use case" }
+  "夜間活動": { canonical: activity_night, type: BOOLEAN, description: "Night activities" }
+  "戶外活動": { canonical: activity_outdoor, type: BOOLEAN, description: "Outdoor activities general" }
+  "日常活動": { canonical: activity_daily, type: BOOLEAN, description: "Daily activities general" }
+  "娛樂": { canonical: activity_entertainment, type: BOOLEAN, description: "Entertainment use case" }
+  "居家修理": { canonical: activity_home_repair, type: BOOLEAN, description: "Home repair use case" }
+  "焊接": { canonical: activity_welding, type: BOOLEAN, description: "Welding work" }
+  "塗裝": { canonical: activity_painting, type: BOOLEAN, description: "Painting / coating work" }
+  "打磨": { canonical: activity_grinding, type: BOOLEAN, description: "Grinding work" }
+  "研磨": { canonical: activity_polishing, type: BOOLEAN, description: "Polishing work" }
+  "木工": { canonical: activity_woodworking, type: BOOLEAN, description: "Woodworking" }
+  "建築": { canonical: activity_construction, type: BOOLEAN, description: "Construction work" }
+  "化學": { canonical: activity_chemistry, type: BOOLEAN, description: "Chemistry / lab work" }
+  "組裝": { canonical: activity_assembly, type: BOOLEAN, description: "Assembly work" }
+  "機械運行": { canonical: activity_machinery_operation, type: BOOLEAN, description: "Machinery operation" }
+  "設施維護": { canonical: activity_facility_maintenance, type: BOOLEAN, description: "Facility maintenance" }
+  "裝修浴缸": { canonical: activity_bathtub_renovation, type: BOOLEAN, description: "Bathtub renovation" }
+  "清潔": { canonical: activity_cleaning, type: BOOLEAN, description: "Cleaning work" }
+  "工作": { canonical: activity_work, type: BOOLEAN, description: "Work / professional use" }
+  "執法": { canonical: activity_law_enforcement, type: BOOLEAN, description: "Law enforcement use" }
+  "露營": { canonical: activity_camping, type: BOOLEAN, description: "Camping use case" }
+  "沙灘": { canonical: activity_beach, type: BOOLEAN, description: "Beach use case" }
+
+  # USER PERSONAS
+  "工人": { canonical: user_worker, type: BOOLEAN, description: "Industrial worker user" }
+  "牙醫": { canonical: user_dentist, type: BOOLEAN, description: "Dentist user" }
+  "醫療": { canonical: user_medical, type: BOOLEAN, description: "Medical professional user" }
+  "學生": { canonical: user_student, type: BOOLEAN, description: "Student user" }
+  "眼鏡族": { canonical: user_eyewear_wearer, type: BOOLEAN, description: "Existing eyewear wearer" }
+  "X1": { canonical: user_segment_x1, type: BOOLEAN, description: "User segment X1 (legacy)" }
+
+  # DEMOGRAPHICS
+  "兒童": { canonical: demographic_kids, type: BOOLEAN, description: "Children demographic" }
+  "嬰兒": { canonical: demographic_infant, type: BOOLEAN, description: "Infant demographic" }
+  "新生兒": { canonical: demographic_newborn, type: BOOLEAN, description: "Newborn demographic" }
+  "青少年": { canonical: demographic_teen, type: BOOLEAN, description: "Teenager demographic" }
+  "男性": { canonical: demographic_male, type: BOOLEAN, description: "Male demographic" }
+  "女性": { canonical: demographic_female, type: BOOLEAN, description: "Female demographic" }
+  "男孩": { canonical: demographic_boy, type: BOOLEAN, description: "Boy demographic" }
+  "女孩": { canonical: demographic_girl, type: BOOLEAN, description: "Girl demographic" }
+  "適合中性": { canonical: demographic_unisex, type: BOOLEAN, description: "Unisex fit" }
+  "X8到10歲大臉小孩客群": { canonical: demographic_kids_8_10_large_face, type: BOOLEAN, description: "Kids ages 8-10 large face" }
+  "小臉至中臉成人客群": { canonical: demographic_adult_small_to_medium_face, type: BOOLEAN, description: "Adult small-to-medium face" }
+  "中臉至大臉成人客群": { canonical: demographic_adult_medium_to_large_face, type: BOOLEAN, description: "Adult medium-to-large face" }
+  "小臉至大臉成人客群": { canonical: demographic_adult_small_to_large_face, type: BOOLEAN, description: "Adult small-to-large face" }
+  "適合圓臉客群": { canonical: demographic_round_face, type: BOOLEAN, description: "Round face demographic" }
+  "適用橢圓臉客群": { canonical: demographic_oval_face, type: BOOLEAN, description: "Oval face demographic" }
+
+  # SCENES
+  "晴天場景": { canonical: scene_sunny, type: BOOLEAN, description: "Sunny scene" }
+  "陰天場景": { canonical: scene_cloudy, type: BOOLEAN, description: "Cloudy scene" }
+  "雨天場景": { canonical: scene_rainy, type: BOOLEAN, description: "Rainy scene" }
+  "多霧場景": { canonical: scene_foggy, type: BOOLEAN, description: "Foggy scene" }
+  "戶外場景": { canonical: scene_outdoor, type: BOOLEAN, description: "Outdoor scene" }
+  "室外場景": { canonical: scene_outdoor_alt, type: BOOLEAN, description: "Outdoor scene (alternate term)" }
+  "室內場景": { canonical: scene_indoor, type: BOOLEAN, description: "Indoor scene" }
+  "居家": { canonical: scene_home, type: BOOLEAN, description: "Home scene" }
+  "辦公室": { canonical: scene_office, type: BOOLEAN, description: "Office scene" }
+  "校園": { canonical: scene_school, type: BOOLEAN, description: "School scene" }
+  "公園": { canonical: scene_park, type: BOOLEAN, description: "Park scene" }
+  "海灘": { canonical: scene_beach, type: BOOLEAN, description: "Beach scene" }
+  "湖畔": { canonical: scene_lakeside, type: BOOLEAN, description: "Lakeside scene" }
+  "度假場景": { canonical: scene_vacation, type: BOOLEAN, description: "Vacation scene" }
+  "醫院": { canonical: scene_hospital, type: BOOLEAN, description: "Hospital scene" }
+  "工廠": { canonical: scene_factory, type: BOOLEAN, description: "Factory scene" }
+  "汽車維修廠": { canonical: scene_auto_repair, type: BOOLEAN, description: "Auto repair shop scene" }
+  "實驗室": { canonical: scene_lab, type: BOOLEAN, description: "Laboratory scene" }
+  "噴漆場景": { canonical: scene_painting_workshop, type: BOOLEAN, description: "Spray painting workshop scene" }
+  "圖片背景": { canonical: scene_photo_background, type: VARCHAR, description: "Photo background description" }
+  "圖片背景_山": { canonical: scene_photo_background_mountain, type: BOOLEAN, description: "Photo background includes mountains" }
+
+  # STYLES
+  "現代風格": { canonical: style_modern, type: BOOLEAN, description: "Modern style" }
+  "復古風格": { canonical: style_retro, type: BOOLEAN, description: "Retro / vintage style" }
+  "經典風格": { canonical: style_classic, type: BOOLEAN, description: "Classic style" }
+  "幾何風格": { canonical: style_geometric, type: BOOLEAN, description: "Geometric style" }
+  "簡約風格": { canonical: style_minimal, type: BOOLEAN, description: "Minimalist style" }
+  "俏皮風格": { canonical: style_playful, type: BOOLEAN, description: "Playful style" }
+  "運動休閒風格": { canonical: style_sport_casual, type: BOOLEAN, description: "Sport casual style" }
+  "眉框風格": { canonical: style_browline, type: BOOLEAN, description: "Browline frame style" }
+
+  # ACCESSORIES / PACKAGING
+  "眼鏡袋": { canonical: accessory_pouch, type: BOOLEAN, description: "Eyewear pouch included" }
+  "眼鏡盒": { canonical: accessory_case, type: BOOLEAN, description: "Eyewear hard case included" }
+  "保護盒": { canonical: accessory_protective_case, type: BOOLEAN, description: "Protective case included" }
+  "清潔布": { canonical: accessory_cleaning_cloth, type: BOOLEAN, description: "Cleaning cloth included" }
+  "拭鏡布": { canonical: accessory_lens_cloth, type: BOOLEAN, description: "Lens cleaning cloth included" }
+  "擦拭布": { canonical: accessory_wipe_cloth, type: BOOLEAN, description: "Wiping cloth included" }
+  "附帶綁帶": { canonical: accessory_strap_included, type: BOOLEAN, description: "Strap included" }
+  "通用綁帶": { canonical: accessory_universal_strap, type: BOOLEAN, description: "Universal strap included" }
+  "頭帶": { canonical: accessory_head_strap, type: BOOLEAN, description: "Head strap accessory" }
+  "頭巾": { canonical: accessory_headband, type: BOOLEAN, description: "Headband accessory" }
+  "耳塞": { canonical: accessory_ear_plug, type: BOOLEAN, description: "Ear plug included" }
+  "耳掛": { canonical: accessory_ear_hook, type: BOOLEAN, description: "Ear hook accessory" }
+  "鑰匙扣": { canonical: accessory_keychain, type: BOOLEAN, description: "Keychain accessory" }
+  "說明書": { canonical: pkg_manual, type: BOOLEAN, description: "User manual included" }
+  "產品說明書": { canonical: pkg_product_manual, type: BOOLEAN, description: "Product manual included" }
+  "安裝指引": { canonical: pkg_installation_guide, type: BOOLEAN, description: "Installation guide included" }
+  "測試卡": { canonical: pkg_test_card, type: BOOLEAN, description: "Test card included" }
+  "偏光測試儀": { canonical: pkg_polarization_tester, type: BOOLEAN, description: "Polarization tester included" }
+  "LED.燈光": { canonical: pkg_led_light, type: BOOLEAN, description: "LED light included" }
+
+  # DEVICES
+  "手機": { canonical: device_phone, type: BOOLEAN, description: "Smartphone use context" }
+  "平板": { canonical: device_tablet, type: BOOLEAN, description: "Tablet use context" }
+  "電腦": { canonical: device_computer, type: BOOLEAN, description: "Computer use context" }
+  "筆電": { canonical: device_laptop, type: BOOLEAN, description: "Laptop use context" }
+  "電視": { canonical: device_tv, type: BOOLEAN, description: "TV use context" }
+
+  # CERTIFICATIONS
+  "ANSI.Z87.1標準": { canonical: standard_ansi_z87_1, type: BOOLEAN, description: "ANSI Z87.1 industrial eye protection" }
+  "ANSI.Z80.3標準": { canonical: standard_ansi_z80_3, type: BOOLEAN, description: "ANSI Z80.3 sunglasses" }
+  "CSA.Z94.3標準": { canonical: standard_csa_z94_3, type: BOOLEAN, description: "CSA Z94.3 Canadian eye protection" }
+  "EN.170標準": { canonical: standard_en_170, type: BOOLEAN, description: "EN 170 UV filters" }
+  "EN166標準": { canonical: standard_en_166, type: BOOLEAN, description: "EN 166 personal eye protection" }
+  "CE.EN.166標準": { canonical: standard_ce_en_166, type: BOOLEAN, description: "CE EN 166 certified" }
+  "DIN.EN.166標準": { canonical: standard_din_en_166, type: BOOLEAN, description: "DIN EN 166 certified" }
+  "MIL.PRF.32432A標準": { canonical: standard_mil_prf_32432a, type: BOOLEAN, description: "MIL-PRF-32432A military" }
+  "OSHA標準": { canonical: standard_osha, type: BOOLEAN, description: "OSHA safety standard" }
+  "達OSHA標準": { canonical: standard_osha_compliant, type: BOOLEAN, description: "OSHA-compliant declaration" }
+  "PPE.2016.425規範": { canonical: standard_ppe_2016_425, type: BOOLEAN, description: "PPE 2016/425 regulation" }
+  "ISO.國際標準認證": { canonical: standard_iso_certified, type: BOOLEAN, description: "ISO international certification" }
+  "CE.認證.歐盟合格認證.": { canonical: standard_ce_eu, type: BOOLEAN, description: "CE / EU conformity certification" }
+  "MDEL認證": { canonical: standard_mdel, type: BOOLEAN, description: "MDEL certification" }
+  "美國.FDA.認證": { canonical: standard_fda_us, type: BOOLEAN, description: "US FDA certification" }
+  "美國.消費品安全改進法.標準": { canonical: standard_us_cpsia, type: BOOLEAN, description: "US CPSIA standard" }
+  "兒童產品合格證明": { canonical: standard_children_product_cert, type: BOOLEAN, description: "Children product compliance" }
+  "澳洲.紐西蘭太陽眼鏡與護目鏡標準": { canonical: standard_au_nz_sunglasses, type: BOOLEAN, description: "AU/NZ sunglasses standard" }
+  "英國.歐盟太陽眼鏡標準": { canonical: standard_uk_eu_sunglasses, type: BOOLEAN, description: "UK/EU sunglasses standard" }
+
+  # SERVICES / TIER
+  "退貨服務": { canonical: service_return, type: BOOLEAN, description: "Return service available" }
+  "售後服務": { canonical: service_after_sale, type: BOOLEAN, description: "After-sale service available" }
+  "入門級": { canonical: tier_entry_level, type: BOOLEAN, description: "Entry-level positioning" }

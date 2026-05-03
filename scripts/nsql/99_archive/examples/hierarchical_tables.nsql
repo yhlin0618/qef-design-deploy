@@ -1,0 +1,41 @@
+# NSQL Hierarchical Table Reference Examples
+
+# Using dot notation for hierarchical table references
+
+# Basic hierarchy: schema.table
+transform Sales.Transactions to MonthlySummary as
+  sum(revenue) as monthly_revenue,
+  count(distinct customer_id) as customer_count
+  grouped by year, month
+
+# Multi-level hierarchy: database.schema.table
+transform Analytics.Sales.Transactions to RegionalSummary as
+  sum(revenue) as regional_revenue,
+  count(order_id) as order_count
+  grouped by region
+
+# Cross-hierarchy join
+transform CRM.Customers joined with Sales.Orders on CRM.Customers.id = Sales.Orders.customer_id to CustomerOrders as
+  CRM.Customers.name as customer_name,
+  CRM.Customers.segment as customer_segment,
+  count(Sales.Orders.id) as order_count,
+  sum(Sales.Orders.total) as total_spend
+  grouped by CRM.Customers.id, CRM.Customers.name, CRM.Customers.segment
+
+# With arrow syntax
+Analytics.Sales.Transactions ->
+  group(region) ->
+  aggregate(
+    regional_revenue = sum(revenue),
+    order_count = count(order_id)
+  )
+
+# Mixed hierarchies with complex joins
+Marketing.Campaigns
+  -> join(Sales.Orders, condition = Marketing.Campaigns.id = Sales.Orders.campaign_id)
+  -> join(CRM.Customers, condition = Sales.Orders.customer_id = CRM.Customers.id)
+  -> group(Marketing.Campaigns.id, Marketing.Campaigns.name)
+  -> aggregate(
+      campaign_revenue = sum(Sales.Orders.total),
+      customer_count = count(distinct CRM.Customers.id)
+     )

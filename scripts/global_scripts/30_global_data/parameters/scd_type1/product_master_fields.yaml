@@ -1,0 +1,113 @@
+# product_master_fields.yaml
+#
+# Field classification for Hybrid conflict arbitration.
+#
+# Used by:
+#   - shared/global_scripts/05_etl_utils/amz/fn_arbitrate_product_master_conflicts.R
+#
+# Two orthogonal classification dimensions:
+#
+#   (A) critical / non_critical (v1, since 2026-04-25)
+#       critical     -> conflict halts ETL with non-zero exit (unless
+#                       PRODUCT_MASTER_STRICT_CONFLICT=false in env)
+#       non_critical -> conflict resolves by source priority, logs OVERRIDE
+#
+#   (B) field_class (v2, since 2026-04-26)
+#       Implements MP155 Three Categories (System-Sourced / Human-Decided /
+#       System-Suggested). When a field has field_class set, the arbitrator
+#       MAY use a per-class priority order (priority_per_class section) instead
+#       of the default source_priority. When field_class is absent for a field,
+#       the arbitrator MUST treat it as Human-Decided (preserving v1 behavior).
+#
+# Schema version: 2 (2026-04-26)
+# Spectra change: qef-gsheet-three-surface-redesign
+
+company_product_master:
+  # ---------- Dimension A: critical / non_critical ----------
+  # Identifying / mapping fields - conflict indicates human error upstream.
+  # Silent override would silently corrupt downstream joins (orders -> product_line).
+  critical:
+    - amz_asin         # mapping target; wrong ASIN means orders land in wrong product line
+    - product_line_id  # grouping key; wrong line breaks all BrandEdge / TagPilot views
+    - sku              # canonical casing of company SKU
+
+  # Descriptive / time-varying fields - conflict is usually a staleness issue.
+  # Taking the highest-priority source and logging is fine.
+  non_critical:
+    - cost
+    - profit
+    - product_name
+    - status
+    - launch_date
+    - brand  # for company-owned SKU, brand is usually fixed, but tolerate variance
+
+  # ---------- Dimension B: field_class (MP155, optional) ----------
+  # Per-field MP155 classification. Add entries here only when QEF-style
+  # 3-surface architecture is adopted for that field. Backwards-compat:
+  # fields not listed default to Human-Decided (= v1 behavior).
+  #
+  # Allowed values: System-Sourced, Human-Decided, System-Suggested
+  #
+  # Activated by Track C `amz-sales-derive-sku-asin` Phase 3 (2026-04-26).
+  # amz_asin is now System-Sourced: when the same (sku, marketplace) pair has
+  # different ASIN values across sources, the resolver picks the value from
+  # the highest-priority System-Sourced source per priority_per_class below
+  # (sales > catalogue > keys_xlsx > sku_asin_xlsx > gsheet_master >
+  # gsheet_sku_asin), and the override event is logged into
+  # attr(result, "system_sourced_override_log") for surfacing in the
+  # Status Gsheet `_sys_anomalies` tab.
+  #
+  # Companies without an active Amazon platform see zero behavior change
+  # (try_read_sales / try_read_catalogue return empty data.frames).
+  #
+  # Other System-Sourced / System-Suggested fields (product_name, brand) are
+  # left for future tracks once their derivation sources are designed.
+  field_class:
+    amz_asin: System-Sourced
+
+  # Per-class priority override (optional). When a field has a field_class
+  # entry above and the corresponding class appears in this section, the
+  # arbitrator uses this priority order INSTEAD of the global source_priority.
+  #
+  # System-Suggested fields: NOT written to master; routed to review queue
+  # via attr(result, "system_suggested_queue") and consumed by
+  # fn_detect_anomalies + fn_write_status_gsheet.
+  priority_per_class:
+    System-Sourced:
+      # System-Sourced fields prefer system-derived sources before manual entry.
+      # Track C (2026-04-26) prepends `sales` + `catalogue` ahead of xlsx/Gsheet:
+      #   - sales: most-frequent ASIN observed in df_amz_sales___transformed
+      #            (90-day lookback by default)
+      #   - catalogue: ASIN listed in df_amz_product_master (per-line
+      #                product_profile tabs unioned by amz_ETL_product_profiles_0IM.R)
+      #   - xlsx / Gsheet: existing manual sources kept as fallback
+      - sales
+      - catalogue
+      - keys_xlsx
+      - sku_asin_xlsx
+      - gsheet_master
+      - gsheet_sku_asin
+    System-Suggested:
+      # No priority order - values routed to review queue.
+      review_action: route_to_status_gsheet
+    # Human-Decided: omit -> uses the global source_priority section below
+
+# Default source priority (highest = wins on non_critical conflict).
+# Used for Human-Decided fields and any field without field_class.
+# This SHALL match fn_resolve_company_product_master.R's source order.
+# Catalogue + sales sit at the END so Human-Decided fields prefer manual
+# sources; only System-Sourced fields swap them to the FRONT (see
+# priority_per_class.System-Sourced above).
+source_priority:
+  - gsheet_master      # Google Sheet `company_product_master` tab
+  - gsheet_sku_asin    # Google Sheet `SKU to ASIN` tab (legacy financial)
+  - keys_xlsx          # Local KEYS.xlsx
+  - sku_asin_xlsx      # Local SKUtoASIN number.xlsx
+  - catalogue          # df_amz_product_master (Track C, system-derived catalogue)
+  - sales              # df_amz_sales___transformed (Track C, system-derived from txns)
+
+# Environment variable controlling strict-mode enforcement.
+# Defaults to TRUE for new companies, FALSE for backward compat when unset.
+env_var_name: "PRODUCT_MASTER_STRICT_CONFLICT"
+
+schema_version: 2

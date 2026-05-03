@@ -1,0 +1,188 @@
+# Variable Chinese Labels Configuration
+# Provides Chinese translations for variable names in the MAMBA system
+# Used for display in UI components and reports
+
+metadata:
+  version: "v1.0"
+  created_date: "2025-09-08"
+  description: "Chinese labels for variables in positioning and analysis components"
+  maintainer: "MAMBA UI Layer"
+  encoding: "UTF-8"
+
+# ============================================================================
+# SECTION 1: Common Product Attributes
+# ============================================================================
+product_attributes:
+  # Basic attributes
+  use_oil: "使用油"
+  oil_capacity: "油容量"
+  temperature_control: "溫度控制"
+  timer_function: "計時功能"
+  dishwasher_safe: "可用洗碗機"
+  auto_shutoff: "自動關機"
+  
+  # Material and build
+  stainless_steel: "不鏽鋼材質"
+  non_stick_coating: "不沾塗層"
+  glass_window: "玻璃視窗"
+  removable_basket: "可拆卸籃子"
+  
+  # Size and capacity
+  capacity_liters: "容量（公升）"
+  dimensions: "尺寸"
+  weight: "重量"
+  power_watts: "功率（瓦特）"
+  
+  # Features
+  preset_programs: "預設程式"
+  digital_display: "數位顯示"
+  touch_control: "觸控操作"
+  mobile_app: "手機應用程式"
+  recipe_book_included: "附食譜"
+  
+  # Safety features
+  cool_touch_handle: "防燙手把"
+  overheat_protection: "過熱保護"
+  child_lock: "兒童鎖"
+  non_slip_feet: "防滑腳墊"
+
+# ============================================================================
+# SECTION 2: E-commerce Specific
+# ============================================================================
+ecommerce_fields:
+  # Sales and pricing
+  price: "價格"
+  discount_percentage: "折扣百分比"
+  coupon_available: "有優惠券"
+  prime_eligible: "Prime 配送"
+  free_shipping: "免運費"
+  
+  # Ratings and reviews
+  rating: "評分"
+  review_count: "評論數量"
+  verified_purchase: "已驗證購買"
+  helpful_votes: "有用票數"
+  
+  # Seller information
+  seller_rating: "賣家評分"
+  fulfilled_by_amazon: "亞馬遜發貨"
+  sold_by: "銷售商"
+  ships_from: "發貨地"
+  
+  # Availability
+  in_stock: "有庫存"
+  stock_quantity: "庫存數量"
+  back_order: "可預訂"
+  estimated_delivery: "預計送達"
+
+# ============================================================================
+# SECTION 3: Customer Behavior
+# ============================================================================
+customer_behavior:
+  # Purchase patterns
+  frequently_bought_together: "經常一起購買"
+  customers_also_viewed: "顧客也瀏覽"
+  customers_also_bought: "顧客也購買"
+  
+  # Engagement
+  questions_answered: "已回答問題"
+  images_uploaded: "上傳圖片數"
+  videos_uploaded: "上傳影片數"
+  
+  # Returns and warranty
+  return_rate: "退貨率"
+  warranty_years: "保固年限"
+  extended_warranty: "延長保固"
+
+# ============================================================================
+# SECTION 4: Platform Specific
+# ============================================================================
+platform_specific:
+  # Amazon specific
+  amazon_choice: "Amazon 精選"
+  best_seller_rank: "暢銷排名"
+  new_release: "新品"
+  lightning_deal: "限時特惠"
+  
+  # eBay specific
+  buy_it_now: "立即購買"
+  auction_end_time: "拍賣結束時間"
+  watchers: "關注人數"
+  bids: "出價次數"
+  
+  # Official website
+  member_exclusive: "會員專屬"
+  loyalty_points: "忠誠積分"
+  bundle_deal: "套裝優惠"
+
+# ============================================================================
+# SECTION 5: Analysis Indicators
+# ============================================================================
+analysis_indicators:
+  # Statistical measures
+  mean_value: "平均值"
+  median_value: "中位數"
+  std_deviation: "標準差"
+  percentile_25: "第25百分位"
+  percentile_75: "第75百分位"
+  
+  # Business metrics
+  conversion_rate: "轉換率"
+  roi: "投資報酬率"
+  market_share: "市場佔有率"
+  growth_rate: "成長率"
+  
+  # Quality indicators
+  defect_rate: "缺陷率"
+  satisfaction_score: "滿意度分數"
+  net_promoter_score: "淨推薦值"
+
+# ============================================================================
+# SECTION 6: Special Categories
+# ============================================================================
+special_categories:
+  # Flags and indicators
+  is_promoted: "已推廣"
+  is_featured: "精選商品"
+  is_seasonal: "季節性商品"
+  is_clearance: "清倉商品"
+  
+  # Status fields
+  active: "啟用"
+  inactive: "停用"
+  pending: "待處理"
+  archived: "已歸檔"
+
+# ============================================================================
+# Usage Instructions
+# ============================================================================
+usage:
+  description: |
+    This configuration provides Chinese translations for variable names
+    used throughout the MAMBA system. It should be loaded by UI components
+    to display user-friendly labels instead of technical variable names.
+  
+  loading_example: |
+    # R code to load and use translations
+    library(yaml)
+    
+    # Load translations
+    labels <- yaml::read_yaml("variable_chinese_labels.yaml")
+    
+    # Function to get Chinese label for a variable
+    get_chinese_label <- function(var_name) {
+      # Search through all categories
+      for (category in names(labels)) {
+        if (category %in% c("metadata", "usage")) next
+        
+        if (var_name %in% names(labels[[category]])) {
+          return(labels[[category]][[var_name]])
+        }
+      }
+      
+      # Return original name if no translation found
+      return(var_name)
+    }
+    
+    # Example usage
+    chinese_label <- get_chinese_label("use_oil")  # Returns "使用油"

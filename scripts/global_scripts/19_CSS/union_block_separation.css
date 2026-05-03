@@ -1,0 +1,287 @@
+/* ========================================
+   MAMBA Union App Styles
+   Following MP119: UI Block Separation Principle
+   ======================================== */
+
+/* ========================================
+   1. CONTROL BLOCKS - User Input Areas
+   ======================================== */
+
+/* Sidebar Control Block */
+.control-block {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 15px;
+  margin-bottom: 10px;
+}
+
+.control-block-header {
+  background: #e9ecef;
+  padding: 10px;
+  margin: -15px -15px 15px -15px;
+  border-radius: 4px 4px 0 0;
+  font-weight: 600;
+  color: #495057;
+}
+
+/* Accordion Control Sections - Don't override bs4Dash defaults */
+/* Only add subtle enhancements that don't break existing styles */
+.accordion-control {
+  margin-bottom: 5px;
+}
+
+.accordion-control .card-header {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.accordion-control .card-body {
+  padding: 15px;
+}
+
+/* ========================================
+   2. DISPLAY BLOCKS - Data Visualization
+   ======================================== */
+
+.display-block {
+  background: #ffffff;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 20px;
+  margin-bottom: 15px;
+}
+
+.display-block-header {
+  border-bottom: 2px solid #007bff;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* ========================================
+   3. NAVIGATION BLOCKS - Menu Items
+   ======================================== */
+
+/* Don't override bs4Dash navigation styles */
+/* These can conflict with the sidebar menu active states */
+
+/*
+.nav-block {
+  background: transparent;
+  padding: 5px 0;
+}
+
+.nav-item {
+  margin: 2px 0;
+}
+
+.nav-link {
+  padding: 8px 15px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.nav-link:hover {
+  background: rgba(0, 123, 255, 0.1);
+}
+
+.nav-link.active {
+  background: #007bff;
+  color: #ffffff !important;
+}
+*/
+
+/* ========================================
+   4. INFORMATION BLOCKS - Status & Metrics
+   ======================================== */
+
+.info-block {
+  background: #e7f3ff;
+  border-left: 4px solid #007bff;
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+.info-block-title {
+  font-weight: 600;
+  color: #004085;
+  margin-bottom: 5px;
+}
+
+.info-block-content {
+  color: #004085;
+}
+
+/* ========================================
+   5. STATUS BLOCKS - System State
+   ======================================== */
+
+.status-block {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 10px 15px;
+  margin-bottom: 10px;
+}
+
+.status-indicator {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.status-indicator.active {
+  background: #28a745;
+}
+
+.status-indicator.pending {
+  background: #ffc107;
+}
+
+.status-indicator.error {
+  background: #dc3545;
+}
+
+/* ========================================
+   6. ACTION BLOCKS - Command Buttons
+   ======================================== */
+
+.action-block {
+  background: #ffffff;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 15px;
+  margin-top: 15px;
+}
+
+.action-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.btn-action {
+  flex: 1;
+  padding: 10px;
+  font-weight: 500;
+}
+
+/* ========================================
+   Visual Hierarchy & Spacing
+   ======================================== */
+
+/* Block Separation */
+.block-separator {
+  height: 1px;
+  background: #dee2e6;
+  margin: 20px 0;
+}
+
+/* Visual Grouping */
+.block-group {
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.block-group-title {
+  position: relative;
+  top: -30px;
+  background: #ffffff;
+  padding: 0 10px;
+  display: inline-block;
+  font-weight: 600;
+  color: #6c757d;
+}
+
+/* ========================================
+   Responsive Design
+   ======================================== */
+
+@media (max-width: 768px) {
+  .control-block,
+  .display-block,
+  .info-block,
+  .status-block,
+  .action-block {
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+  
+  .action-group {
+    flex-direction: column;
+  }
+}
+
+/* ========================================
+   Animation & Transitions
+   ======================================== */
+
+.block-transition {
+  transition: all 0.3s ease;
+}
+
+.block-transition:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Loading States */
+.block-loading {
+  opacity: 0.6;
+  pointer-events: none;
+  position: relative;
+}
+
+.block-loading::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid #007bff;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ========================================
+   Color Palette (Following MP119)
+   ======================================== */
+
+:root {
+  /* Control Blocks */
+  --control-bg: #f8f9fa;
+  --control-border: #dee2e6;
+  --control-header: #e9ecef;
+  
+  /* Display Blocks */
+  --display-bg: #ffffff;
+  --display-border: #dee2e6;
+  --display-accent: #007bff;
+  
+  /* Information Blocks */
+  --info-bg: #e7f3ff;
+  --info-border: #007bff;
+  --info-text: #004085;
+  
+  /* Status Indicators */
+  --status-active: #28a745;
+  --status-pending: #ffc107;
+  --status-error: #dc3545;
+  
+  /* General */
+  --text-primary: #212529;
+  --text-secondary: #6c757d;
+  --text-muted: #adb5bd;
+}

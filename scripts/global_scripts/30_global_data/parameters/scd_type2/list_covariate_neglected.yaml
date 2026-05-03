@@ -1,0 +1,427 @@
+# Covariate Exclusion Rules Configuration
+# Defines covariates to exclude from Poisson regression and other analyses
+# Supports exact matches, regex patterns, and conditional rules
+
+metadata:
+  version: "v1.0"
+  effective_date: "2025-08-03"
+  description: "Covariate exclusion rules for Poisson regression analysis"
+  maintainer: "ETL Transform Layer - Feature Engineering"
+  last_updated: "2025-08-03"
+  purpose: "Define covariates to exclude from analysis using exact matches and regex patterns"
+
+# ============================================================================
+# SECTION 1: Exact Match Exclusions
+# ============================================================================
+exact_matches:
+  # System and identifier fields
+  system_fields:
+    - "product_id"
+    - "product_line_id"
+    - "platform_id"
+    - "item_id"
+    - "asin"
+    - "ebay_item_number"
+    - "eby_item_id"
+    - "record_id"
+    - "system_id"
+    - "internal_id"
+    - "index"
+    - "row_id"
+    - "row_number"
+  
+  # Timestamp and date fields
+  timestamp_fields:
+    - "created_at"
+    - "updated_at"
+    - "timestamp"
+    - "date_created"
+    - "date_modified"
+    - "last_modified"
+    - "insertion_date"
+    - "modification_date"
+  
+  # Target variables (usually dependent variables, not covariates)
+  target_variables:
+    - "sales"
+    - "revenue"
+    - "total_sales"
+    - "total_revenue"
+    - "quantity_sold"
+    - "units_sold"
+    - "gross_revenue"
+    - "net_revenue"
+  
+  # Text and descriptive fields
+  text_fields:
+    - "description"
+    - "comments"
+    - "notes"
+    - "product_title"
+    - "product_name"
+    - "product_description"
+    - "review_text"
+    - "customer_comments"
+    - "feedback"
+  
+  # URL and link fields
+  url_fields:
+    - "product_url"
+    - "image_url"
+    - "link"
+    - "website"
+    - "homepage"
+    - "product_link"
+    - "image_link"
+    - "thumbnail_url"
+
+# ============================================================================
+# SECTION 2: Regular Expression Pattern Rules
+# ============================================================================
+regex_patterns:
+  # Patterns for missing data indicators
+  missing_data_patterns:
+    - pattern: ".*is_missing.*"
+      description: "Any variable containing 'is_missing'"
+      case_sensitive: false
+    
+    - pattern: ".*_missing$"
+      description: "Variables ending with '_missing'"
+      case_sensitive: false
+    
+    - pattern: "^missing_.*"
+      description: "Variables starting with 'missing_'"
+      case_sensitive: false
+    
+    - pattern: ".*_na$"
+      description: "Variables ending with '_na'"
+      case_sensitive: false
+  
+  # ID-related patterns
+  id_patterns:
+    - pattern: ".*_id$"
+      description: "Any variable ending with '_id'"
+      case_sensitive: false
+    
+    - pattern: "^(id_|ID_).*"
+      description: "Variables starting with 'id_' or 'ID_'"
+      case_sensitive: false
+    
+    - pattern: ".*_(uuid|UUID|guid|GUID).*"
+      description: "UUID or GUID fields"
+      case_sensitive: false
+  
+  # URL and link patterns
+  url_patterns:
+    - pattern: ".*_(url|URL|link|LINK|href|HREF)$"
+      description: "Variables ending with url, link, or href"
+      case_sensitive: false
+    
+    - pattern: "^(url|URL|link|LINK)_.*"
+      description: "Variables starting with url, link"
+      case_sensitive: false
+    
+    - pattern: ".*url.*"
+      description: "Any variable containing 'url' anywhere"
+      case_sensitive: false
+    
+    - pattern: ".*(website|homepage|webpage).*"
+      description: "Web-related fields"
+      case_sensitive: false
+  
+  # Temporary and test patterns
+  temp_patterns:
+    - pattern: "^(temp_|tmp_|test_|TEST_|debug_|DEBUG_).*"
+      description: "Temporary or test variables"
+      case_sensitive: false
+    
+    - pattern: ".*_(temp|tmp|test|debug)$"
+      description: "Variables ending with temp/test indicators"
+      case_sensitive: false
+  
+  # Status and flag patterns
+  status_patterns:
+    - pattern: ".*_(deleted|removed|archived|obsolete)$"
+      description: "Deletion or archive status flags"
+      case_sensitive: false
+    
+    - pattern: "^is_(deleted|removed|archived|inactive).*"
+      description: "Boolean deletion/inactive flags"
+      case_sensitive: false
+  
+  # Internal and system patterns
+  internal_patterns:
+    - pattern: "^_.*"
+      description: "Variables starting with underscore (internal)"
+      case_sensitive: true
+    
+    - pattern: ".*\\$.*"
+      description: "Variables containing dollar sign (R internal)"
+      case_sensitive: true
+    
+    - pattern: ".*\\.\\d+$"
+      description: "Variables ending with dot and number (duplicates)"
+      case_sensitive: true
+  
+  # Technical metadata patterns
+  technical_patterns:
+    - pattern: ".*_(version|VERSION|ver|VER).*"
+      description: "Version-related fields"
+      case_sensitive: false
+    
+    - pattern: ".*(hash|checksum|md5|sha|SHA).*"
+      description: "Hash or checksum fields"
+      case_sensitive: false
+    
+    - pattern: "^(row_|ROW_|col_|COL_|column_|COLUMN_).*"
+      description: "Row/column indices"
+      case_sensitive: false
+    
+    - pattern: ".*_(count|COUNT|cnt|CNT)$"
+      description: "Count fields (often aggregates)"
+      case_sensitive: false
+  
+  # Date component patterns
+  date_component_patterns:
+    - pattern: "^(year|month|day|hour|minute|second)_.*"
+      description: "Date/time component fields"
+      case_sensitive: false
+    
+    - pattern: ".*_(year|month|day|hour|minute|second)$"
+      description: "Date/time component suffixes"
+      case_sensitive: false
+  
+  # Brand-related patterns
+  brand_patterns:
+    - pattern: ".*brand.*"
+      description: "Any variable containing 'brand' anywhere"
+      case_sensitive: false
+    
+    - pattern: ".*manufacturer.*"
+      description: "Manufacturer-related fields (similar to brand)"
+      case_sensitive: false
+    
+    - pattern: ".*vendor.*"
+      description: "Vendor-related fields"
+      case_sensitive: false
+  
+  # Type-related patterns
+  type_patterns:
+    - pattern: ".*type.*"
+      description: "Any variable containing 'type' anywhere"
+      case_sensitive: false
+    
+    - pattern: ".*category.*"
+      description: "Category-related fields (similar to type)"
+      case_sensitive: false
+    
+    - pattern: ".*class.*"
+      description: "Classification-related fields"
+      case_sensitive: false
+    
+    - pattern: ".*kind.*"
+      description: "Kind-related fields (similar to type)"
+      case_sensitive: false
+
+# ============================================================================
+# SECTION 3: Conditional Exclusion Rules
+# ============================================================================
+conditional_rules:
+  # Rules based on data characteristics
+  by_data_type:
+    - type: "character"
+      min_unique_ratio: 0.95
+      description: "Character fields with >95% unique values (likely IDs)"
+    
+    - type: "character"
+      max_unique_values: 1
+      description: "Character fields with only one unique value"
+    
+    - type: "logical"
+      all_same_value: true
+      description: "Boolean fields with no variation"
+    
+    - type: "numeric"
+      all_missing: true
+      description: "Numeric fields with all NA values"
+    
+    - type: "numeric"
+      zero_variance: true
+      description: "Numeric fields with zero variance"
+  
+  # Rules based on naming patterns and data type
+  combined_rules:
+    - name_pattern: ".*price.*"
+      data_type: "character"
+      description: "Price fields stored as character (likely formatting issues)"
+    
+    - name_pattern: ".*quantity.*"
+      min_unique_ratio: 0.99
+      description: "Quantity fields that are almost all unique (likely order-level)"
+
+# ============================================================================
+# SECTION 4: Application-Specific Settings
+# ============================================================================
+application_settings:
+  # Poisson regression specific exclusions
+  poisson_regression:
+    use_exact_matches: true
+    use_regex_patterns: true
+    use_conditional_rules: true
+    additional_excludes:
+      - "brand"          # Often handled separately as factor
+      - "category"       # Usually converted to dummy variables
+      - "subcategory"    # Usually converted to dummy variables
+      - "product_type"   # Usually converted to dummy variables
+    exclude_high_cardinality: true
+    cardinality_threshold: 50  # Exclude factors with >50 levels
+  
+  # Positioning analysis specific exclusions
+  positioning_analysis:
+    use_exact_matches: true
+    use_regex_patterns: true
+    use_conditional_rules: false
+    additional_excludes:
+      - "competitor_price"
+      - "competitor_rating"
+      - "market_share"
+    preserve_positioning_scores: true
+  
+  # Time series analysis specific exclusions
+  time_series_analysis:
+    use_exact_matches: true
+    use_regex_patterns: false  # Be more careful with time patterns
+    use_conditional_rules: true
+    additional_excludes:
+      - "seasonality_factor"
+      - "trend_component"
+    preserve_time_features: true
+
+# ============================================================================
+# SECTION 5: Usage Instructions
+# ============================================================================
+usage_instructions:
+  description: |
+    This configuration file defines covariates to exclude from statistical analyses.
+    It supports three exclusion mechanisms:
+    1. Exact matches: Direct variable name matching
+    2. Regular expressions: Pattern-based matching with case sensitivity options
+    3. Conditional rules: Dynamic exclusion based on data characteristics
+    
+    IMPORTANT: These exclusion rules are applied at the PRESENTATION STAGE only,
+    not during the analysis phase. This ensures that variables like 'is_missing'
+    indicators remain available for the statistical analysis itself, as they may
+    be used as criteria for excluding other variables or for model diagnostics.
+    The filtering happens after all calculations are complete, just before 
+    displaying results to users.
+  
+  loading_example: |
+    # R code to load and use this configuration
+    library(yaml)
+    
+    # Load configuration
+    config <- yaml::read_yaml("list_covariate_neglected.yaml")
+    
+    # Function to check if a variable should be excluded
+    should_exclude_covariate <- function(var_name, data = NULL, app_type = "poisson_regression") {
+      # Get application-specific settings
+      app_settings <- config$application_settings[[app_type]]
+      if (is.null(app_settings)) app_settings <- config$application_settings$poisson_regression
+      
+      # Check additional excludes for this application
+      if (var_name %in% app_settings$additional_excludes) return(TRUE)
+      
+      # 1. Check exact matches if enabled
+      if (app_settings$use_exact_matches) {
+        if (var_name %in% unlist(config$exact_matches)) return(TRUE)
+      }
+      
+      # 2. Check regex patterns if enabled
+      if (app_settings$use_regex_patterns) {
+        for (category in names(config$regex_patterns)) {
+          for (rule in config$regex_patterns[[category]]) {
+            pattern <- rule$pattern
+            case_sensitive <- rule$case_sensitive %||% TRUE
+            
+            if (!case_sensitive) {
+              if (grepl(pattern, var_name, ignore.case = TRUE)) return(TRUE)
+            } else {
+              if (grepl(pattern, var_name)) return(TRUE)
+            }
+          }
+        }
+      }
+      
+      # 3. Check conditional rules if enabled and data provided
+      if (app_settings$use_conditional_rules && !is.null(data) && var_name %in% names(data)) {
+        # Implement conditional rule checks here
+        var_data <- data[[var_name]]
+        var_type <- class(var_data)[1]
+        
+        for (rule in config$conditional_rules$by_data_type) {
+          if (rule$type == var_type) {
+            # Check various conditions
+            if (!is.null(rule$min_unique_ratio)) {
+              unique_ratio <- length(unique(var_data)) / length(var_data)
+              if (unique_ratio >= rule$min_unique_ratio) return(TRUE)
+            }
+            
+            if (!is.null(rule$all_same_value) && rule$all_same_value) {
+              if (length(unique(var_data)) == 1) return(TRUE)
+            }
+            
+            if (!is.null(rule$zero_variance) && rule$zero_variance) {
+              if (var(var_data, na.rm = TRUE) == 0) return(TRUE)
+            }
+          }
+        }
+      }
+      
+      return(FALSE)
+    }
+    
+    # Filter covariates for analysis
+    all_vars <- names(your_data)
+    selected_covariates <- all_vars[!sapply(all_vars, should_exclude_covariate, 
+                                            data = your_data, 
+                                            app_type = "poisson_regression")]
+  
+  integration_points:
+    - "poissonFeatureAnalysis component (presentation layer only)"
+    - "poissonTimeAnalysis component (presentation layer only)"
+    - "Data preprocessing pipelines (for display purposes)"
+    - "Feature selection functions (post-analysis filtering)"
+    - "Model building utilities (retains all variables during modeling)"
+    - "Cross-platform covariate standardization (display standardization)"
+    
+  timing_note: |
+    CRITICAL: Exclusion rules are applied AFTER analysis completion.
+    This preserves variables needed for:
+    - Missing data indicators used in analysis logic
+    - Model diagnostics and validation
+    - Conditional exclusion criteria evaluation
+    - Statistical calculations and transformations
+
+# ============================================================================
+# SECTION 6: Validation and Quality Checks
+# ============================================================================
+validation:
+  # Rules for validating the exclusion list
+  consistency_checks:
+    - "No variable should appear in both exact_matches and as a regex pattern"
+    - "Regex patterns should compile without errors"
+    - "Case sensitivity should be explicitly specified for all patterns"
+  
+  # Testing recommendations
+  test_cases:
+    - "is_missing_price" # Should match is_missing pattern
+    - "product_id"       # Should match exact match
+    - "temp_calculation" # Should match temp pattern
+    - "_internal_var"    # Should match underscore pattern
+    - "brand_name"       # Should match brand pattern
+    - "product_brand"    # Should match brand pattern
+    - "manufacturer_id"  # Should match manufacturer pattern
+    - "product_type"     # Should match type pattern
+    - "item_type"        # Should match type pattern
+    - "category_id"      # Should match category pattern
+    - "normal_variable"  # Should NOT match any pattern

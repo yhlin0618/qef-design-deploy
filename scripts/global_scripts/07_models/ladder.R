@@ -1,0 +1,1 @@
+ladder <- function(x) paste(strsplit(toupper(x), split = "")[[1]], sep = "", collapse="\n")

@@ -1,0 +1,39 @@
+# NSQL Transform Pattern Examples
+
+# Basic aggregation
+transform CustomerTransactions to CustomerSummary as
+  sum(purchase_amount) as total_spend,
+  count(transaction_id) as transaction_count,
+  max(purchase_date) as last_purchase_date
+  grouped by customer_id
+  ordered by total_spend desc
+
+# Time-based analysis
+transform Sales to MonthlySalesByRegion as
+  sum(revenue) as monthly_revenue,
+  count(distinct order_id) as order_count,
+  average(unit_price) as avg_price
+  grouped by region, date_trunc(order_date, "month") as month
+  where status = "completed"
+  ordered by region, month desc
+
+# Join operation
+transform Orders joined with Customers on order.customer_id = customer.id to OrderDetails as
+  order.id as order_id,
+  order.date as order_date,
+  customer.name as customer_name,
+  sum(order.total) as order_total
+  grouped by order.id, order.date, customer.name
+  where order.date > date("2025-01-01")
+
+# Advanced filtering
+transform CustomerInteractions to HighValueEngagement as
+  customer_id,
+  interaction_date,
+  interaction_type,
+  interaction_value
+  where interaction_value > threshold("high")
+  and interaction_date is after(now() minus(days(30)))
+  and customer_segment in ["premium", "enterprise"]
+  ordered by interaction_date desc
+  limit 100
